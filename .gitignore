@@ -1,5 +1,6 @@
 # Ignore data directory at repository root
 /data/raw/effectifs.csv
+/data/clean/csv_clean.csv
 /data/effectifs.sqlite3
 /db/__pycache__/
 __pycache__/
