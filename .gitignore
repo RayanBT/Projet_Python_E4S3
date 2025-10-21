@@ -1,3 +1,4 @@
 # Ignore data directory at repository root
 /data/
 /db/__pycache__/
+__pycache__/

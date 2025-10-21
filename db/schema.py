@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from pydantic.config import ConfigDict
 
 class EffectifBase(BaseModel):
@@ -22,6 +22,14 @@ class EffectifBase(BaseModel):
 
     # Pydantic v2
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+    @field_validator("annee", "sexe", "Ntop", "Npop", "tri", mode="before")
+    @classmethod
+    def empty_string_to_none(cls, value):
+        """Normalize blank strings to None so numeric parsing works."""
+        if isinstance(value, str) and value.strip() == "":
+            return None
+        return value
 
 class EffectifCreate(EffectifBase):
     """Schéma d'entrée (sans id)."""

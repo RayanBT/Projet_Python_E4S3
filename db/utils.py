@@ -1,4 +1,4 @@
-﻿import csv
+import csv
 import sqlite3
 from pathlib import Path
 from typing import Final
@@ -73,7 +73,7 @@ def import_csv_to_sqlite(csv_path: Path, db_path: Path, table_name: str) -> int:
         insert_sql = f'INSERT INTO "{table_name}" ({cols_quoted}) VALUES ({placeholders});'
 
         # 3) Détecter le délimiteur
-        with csv_path.open("r", encoding="utf-8", newline="") as f:
+        with csv_path.open("r", encoding="utf-8-sig", newline="") as f:
             header = f.readline()
             delim = ";" if ";" in header else ("," if "," in header else ";")
             f.seek(0)
@@ -99,4 +99,3 @@ def import_csv_to_sqlite(csv_path: Path, db_path: Path, table_name: str) -> int:
 def count_rows_raw(db_path: Path, table_name: str) -> int:
     with sqlite3.connect(db_path) as conn:
         return int(conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()[0])
-
