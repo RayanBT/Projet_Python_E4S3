@@ -21,7 +21,7 @@ DATA_DIR: Final[Path] = ROOT / "data"
 CSV_URL: Final[str] = (
     "https://data.ameli.fr/api/explore/v2.1/catalog/datasets/effectifs/exports/csv?use_labels=true"
 )
-CSV_DEST: Final[Path] = DATA_DIR / "effectifs.csv"
+CSV_DEST: Final[Path] = DATA_DIR / "raw/effectifs.csv"
 
 DB_PATH: Final[Path] = DATA_DIR / "effectifs.sqlite3"
 TABLE_NAME: Final[str] = "effectifs"
