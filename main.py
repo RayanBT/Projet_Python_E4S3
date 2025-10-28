@@ -13,6 +13,7 @@ from dash import Dash, html, dcc, Input, Output
 from src.components.header import header
 from src.components.navbar import navbar
 from src.components.footer import footer
+from src.pages.home import create_app
 from src.pages.simple_page import layout as simple_page_layout
 
 
@@ -106,40 +107,14 @@ def prepare_database() -> None:
             print(f"[INFO] Pydantic ignoré ({exc.__class__.__name__}: {exc})")
 
 
-# --- Création de l'application Dash ---------------------------------------------
-app = Dash(__name__, suppress_callback_exceptions=True)
-server = app.server
-
-app.layout = html.Div([
-    header("Mon Dashboard"),
-    navbar(),
-    dcc.Location(id="url", refresh=False),
-    html.Div(id="page-content"),
-    footer()
-])
-
-
-@app.callback(
-    Output("page-content", "children"),
-    Input("url", "pathname")
-)
-def display_page(pathname):
-    if pathname == "/simple":
-        return simple_page_layout()
-    elif pathname == "/about":
-        return html.H2("Page À propos")
-    else:
-        return html.H2("Bienvenue sur la page d'accueil !")
-
-
 # --- Point d'entrée du script ---------------------------------------------------
 
 if __name__ == "__main__":
-    # Exécuter la préparation de la base seulement une fois (pas au rechargement)
+    # Exécuter la préparation de la base seulement dans le vrai processus Dash
     if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
         prepare_database()
+        print("\n[INFO] Lancement du serveur Dash sur http://127.0.0.1:8050 ...")
 
-    print("\n[INFO] Lancement du serveur Dash sur http://127.0.0.1:8050 ...")
+    app = create_app()
     app.run(debug=True)
-
 
