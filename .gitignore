@@ -4,3 +4,4 @@
 /data/effectifs.sqlite3
 /db/__pycache__/
 __pycache__/
+/scr/pages/more_complex_page/datagouv-communes.geojson
