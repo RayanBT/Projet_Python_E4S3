@@ -1,12 +1,18 @@
-# src/pages/simple_page.py
-from dash import html, dcc
+"""Page simple de demonstration avec un petit graphique."""
+
+from dash import dcc, html
+
 
 def layout():
-    """Layout de la page simple."""
+    """Construit le layout de la page simple.
+
+    Returns:
+        dash.html.Div: Contenu principal de la page.
+    """
     return html.Div(
         children=[
             html.H2("Page Simple"),
-            html.P("Ceci est une page simple de démonstration."),
+            html.P("Ceci est une page simple de demonstration."),
             dcc.Graph(
                 figure={
                     "data": [
