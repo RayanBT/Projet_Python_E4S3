@@ -3,20 +3,31 @@ import json
 import folium
 from shapely.geometry import shape, mapping
 from typing import List, Dict, Any, Tuple
+from sqlalchemy.orm import Session
+from sqlalchemy import create_engine, select
+
+from your_database_module import get_engine, reflect_effectifs, DB_PATH, TABLE_NAME
 
 
 def load_geojson(path: str) -> Dict[str, Any]:
-    """Charge un fichier GeoJSON."""
+    """Charge un fichier GeoJSON."""    #FAIRE D'ABORD UN TRY DE RECUP EN LOCAL ET SI Y A PAS REGARDER SUR INTERNET POUR CHARGER LE JSON
+    
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
-def load_csv(path: str, dtype_dict: Dict[str, Any] = None) -> pd.DataFrame:
-    """Charge un fichier CSV (avec types spécifiques si besoin)."""
-    df: pd.DataFrame = pd.read_csv(path, sep=",", dtype=dtype_dict) #MODIF POUR QUE ; !!!!!!!!!
+def load_from_db(table_name: str) -> pd.DataFrame:
+    """Charge les données depuis la base SQLite"""
+    engine = get_engine(DB_PATH)
+    Effectif = reflect_effectifs(engine, table_name)
+    with Session(engine) as session:
+        # Sélection uniquement des colonnes nécessaires
+        stmt = select(Effectif.region, Effectif.Ntop)
+        df = pd.read_sql(stmt, session.bind)
+    
     # Nettoyage de base 
-    df = df[df['region'] != '99'] #On filtre le code COG (de l'INSEE) 99 qui désigne les territoires étrangers (hors France métropolitaine/DOM‑COM) car ce n'es pas cartographiable (le code n'est pas présent dans le geojson)
-    df['region'] = df['region'].astype(int)#A VERIFIER UTILITE !!!!!!!
+    df = df[df['region'] != '99']  #On filtre le code COG (de l'INSEE) 99 qui désigne les territoires étrangers (hors France métropolitaine/DOM‑COM) car ce n'es pas cartographiable (le code n'est pas présent dans le geojson)
+    df['region'] = df['region'].astype(int) #A VERIFIER UTILITE !!!!!!!
     return df
 
 
@@ -81,31 +92,12 @@ def create_choropleth_map(
 
 def main():
     geojson_path = "src/pages/more_complex_page/datagouv-communes.geojson"
-    csv_path = "data/clean/csv_clean.csv"
     simplified_geojson_path = "src/pages/more_complex_page/geo_simplified.json"
     output_map_path = "src/pages/carte3.html"
 
-    dtype_dict = {
-        'top': str,
-        'tri': float,
-        'Npop': int,
-        'Ntop': int,
-        'dept': str,
-        'prev': str,
-        'sexe': int,
-        'annee': 'Int64',
-        'region': str,
-        'cla_age_5': str,
-        'patho_niv1': str,
-        'patho_niv2': str,
-        'patho_niv3': str,
-        'libelle_sexe': str,
-        'Niveau prioritaire': str,
-        'libelle_classe_age': str
-    }
-
-    geo_data = load_geojson(geojson_path)
-    df = load_csv(csv_path, dtype_dict)
+    geo_data = load_geojson(geojson_path)  
+    # Charger depuis la base SQLite
+    df = load_from_db(TABLE_NAME)
     data_for_map_df = data_for_map(df, 'region', 'Ntop')
 
     essential_keys = ["code_insee_region", "commune"]
