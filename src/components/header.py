@@ -13,6 +13,11 @@ def header(title: str = "Mon Dashboard"):
         dash.html.Header: Composant Dash representant l'entete.
     """
     return html.Header(
-        children=[html.H1(title, style={"textAlign": "center", "margin": "20px 0"})],
-        style={"backgroundColor": "#1E90FF", "color": "white", "padding": "10px"},
+        className="app-header",
+        children=[
+            html.Div(className="header-content", children=[
+                html.H1(title, className="header-title"),
+                html.P("Analyse des pathologies en France", className="header-subtitle")
+            ])
+        ]
     )

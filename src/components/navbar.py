@@ -1,6 +1,7 @@
 """Barre de navigation centrale partagee par toutes les pages."""
 
 from dash import html
+from src.components.icons import icon_home, icon_chart_bar, icon_chart_line, icon_info
 
 
 def navbar():
@@ -10,19 +11,14 @@ def navbar():
         dash.html.Nav: Composant Dash representant la navigation.
     """
     nav_links = [
-        html.A("Accueil", href="/", style={"marginRight": "20px"}),
-        html.A("Page simple", href="/simple", style={"marginRight": "20px"}),
-        html.A("A propos", href="/about"),
+        html.A([icon_home(), "Accueil"], href="/", className="nav-link"),
+        html.A([icon_chart_bar(), "Carte"], href="/carte", className="nav-link"),
+        html.A([icon_chart_line(), "Évolution"], href="/evolution", className="nav-link"),
+        html.A([icon_chart_bar(), "Histogrammes"], href="/histogramme", className="nav-link"),
+        html.A([icon_info(), "À propos"], href="/about", className="nav-link"),
     ]
 
     return html.Nav(
-        children=nav_links,
-        style={
-            "display": "flex",
-            "justifyContent": "center",
-            "alignItems": "center",
-            "backgroundColor": "#f8f9fa",
-            "padding": "10px",
-            "borderBottom": "1px solid #ddd",
-        },
+        className="app-nav",
+        children=nav_links
     )
