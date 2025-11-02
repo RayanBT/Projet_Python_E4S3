@@ -3,18 +3,12 @@ Package: pages
 --------------
 Contient les différentes pages du dashboard :
 - page d'accueil
-- page "À propos"
-- pages simples et complexes
+- carte choroplèthe
+- évolution temporelle
+- histogrammes
+- dashboard
 """
 
-#from .home import *
-#from .about import *
-from .simple_page import *
-#from .more_complex_page import *
+# Les pages sont importées dynamiquement dans home.py selon les besoins
+# pour éviter les conflits de callbacks
 
-__all__ = [
-    "home",
-    "about",
-    "simple_page",
-    "more_complex_page",
-]
