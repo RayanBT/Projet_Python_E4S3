@@ -40,7 +40,6 @@ def render_setup_page(
     *,
     completed: bool,
     success: bool,
-    finished_at: float | None = None,
 ) -> html.Div:
     """Construit la page affichee pendant l'initialisation des donnees.
 
@@ -49,7 +48,6 @@ def render_setup_page(
         current_step (str | None): Etape en cours selon l'etat partage.
         completed (bool): Indique si la sequence est terminee.
         success (bool): Indique si toutes les etapes ont reussi.
-        finished_at (float | None): Timestamp de fin (non exploite ici).
 
     Returns:
         dash.html.Div: Contenu Dash a afficher durant l'attente.

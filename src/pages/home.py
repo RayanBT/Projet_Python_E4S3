@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+import os
 
 from dash import Dash, Input, Output, dcc, html
 
@@ -10,8 +11,14 @@ from src.components.footer import footer
 from src.components.header import header
 from src.components.navbar import navbar
 from src.pages.setup import render_setup_page
-from src.pages.simple_page import layout as simple_page_layout
 from src.state.init_progress import InitializationState
+
+# Import des modules pour enregistrer les callbacks (sans exécuter les layouts)
+import src.pages.carte as carte_module
+import src.pages.evolution as evolution_module
+import src.pages.dashboard as dashboard_module
+import src.pages.accueil as accueil_module
+import src.pages.histogramme as histogramme_module
 
 COMPLETION_DELAY = 2.0
 
@@ -42,7 +49,17 @@ def create_app(init_state: InitializationState) -> Dash:
     Returns:
         Dash: Instance configuree de l'application Dash.
     """
-    app = Dash(__name__, suppress_callback_exceptions=True)
+    # Chemin absolu vers le dossier assets dans src/
+    # __file__ est dans src/pages/home.py, donc on remonte de 1 niveau
+    src_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    assets_path = os.path.join(src_root, 'assets')
+    
+    app = Dash(
+        __name__, 
+        suppress_callback_exceptions=True,
+        assets_folder=assets_path,
+        assets_url_path='/assets'
+    )
 
     initial_status = init_state.to_dict()
     initial_status["show_loader"] = _should_show_loader(initial_status)
@@ -54,11 +71,11 @@ def create_app(init_state: InitializationState) -> Dash:
             dcc.Store(id="init-status", data=initial_status),
             dcc.Interval(
                 id="init-poll",
-                interval=1_000,
+                interval=2_000,  # Intervalle augmenté à 2 secondes pour réduire le clignotement
                 n_intervals=0,
                 disabled=not initial_status["needs_setup"],
             ),
-            html.Div(id="page-content"),
+            html.Div(id="page-content", className="page-content-wrapper"),
             footer(),
         ]
     )
@@ -81,16 +98,15 @@ def create_app(init_state: InitializationState) -> Dash:
         Output("page-content", "children"),
         Input("url", "pathname"),
         Input("init-status", "data"),
+        prevent_initial_call=False,
     )
     def display_page(pathname: str, init_status: dict) -> html.Div:
         """Retourne le layout approprie selon le chemin et l'avancement."""
         show_loader = init_status.get("show_loader", False)
-        needs_setup = init_status.get("needs_setup", False)
         completed = init_status.get("completed", False)
         success = init_status.get("success", False)
         messages = init_status.get("messages", [])
         current_step = init_status.get("current_step")
-        finished_at = init_status.get("finished_at")
 
         if show_loader:
             return render_setup_page(
@@ -98,13 +114,21 @@ def create_app(init_state: InitializationState) -> Dash:
                 current_step=current_step,
                 completed=completed,
                 success=success,
-                finished_at=finished_at,
             )
 
-        if pathname == "/simple":
-            return simple_page_layout()
+        # Routes pour les nouvelles pages
+        if pathname == "/carte":
+            return carte_module.layout()
+        if pathname == "/evolution":
+            return evolution_module.layout()
+        if pathname == "/histogramme":
+            return histogramme_module.layout()
+        if pathname == "/dashboard":
+            return dashboard_module.layout()
         if pathname == "/about":
             return html.H2("Page a propos")
-        return html.H2("Bienvenue sur la page d'accueil !")
+        
+        # Page d'accueil par défaut
+        return accueil_module.layout()
 
     return app
