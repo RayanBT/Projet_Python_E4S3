@@ -1,7 +1,45 @@
-# Ignore data directory at repository root
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# === Environnements virtuels ===
+venv/
+env/
+ENV/
+.venv
+
+# === IDEs ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# === Données ===
+# Fichiers volumineux téléchargés automatiquement
 /data/raw/effectifs.csv
 /data/clean/csv_clean.csv
 /data/effectifs.sqlite3
-/db/__pycache__/
-__pycache__/
-/scr/pages/more_complex_page/datagouv-communes.geojson
+
+# Garder la structure des dossiers
+!data/.gitkeep
+!data/raw/.gitkeep
+!data/clean/.gitkeep
+!data/geolocalisation/
+
+# === OS ===
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === Logs ===
+*.log
+logs/
+
+# === Temporaires ===
+*.tmp
+*.temp
+.cache/

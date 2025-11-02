@@ -1,0 +1,2 @@
+# Ce fichier permet de conserver le dossier data/clean/ dans Git
+# Le CSV nettoyé sera créé automatiquement au premier lancement

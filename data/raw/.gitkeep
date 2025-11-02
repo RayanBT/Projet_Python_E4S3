@@ -1,0 +1,2 @@
+# Ce fichier permet de conserver le dossier data/raw/ dans Git
+# Le CSV sera téléchargé automatiquement au premier lancement
