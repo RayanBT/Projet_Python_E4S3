@@ -1,0 +1,370 @@
+/* ========================================
+   STYLES SPÉCIFIQUES - PAGE HISTOGRAMME
+   ======================================== */
+
+/* Page header with icon */
+.page-container .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 10px;
+}
+
+/* Page title */
+.page-container .page-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #2c3e50;
+    text-align: center;
+    margin: 0;
+}
+
+/* Page description */
+.page-container .page-description {
+    text-align: center;
+    color: #7f8c8d;
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+    line-height: 1.6;
+}
+
+/* Filter group container */
+.page-container .filter-group {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Filter label */
+.page-container .filter-label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+    color: #2c3e50;
+    font-size: 0.95rem;
+}
+
+/* Filter dropdown styling */
+.page-container .filter-dropdown .Select-control {
+    border-radius: 6px !important;
+    border: 2px solid #e4e7eb !important;
+    min-height: 42px !important;
+    transition: border-color 0.3s ease;
+}
+
+.page-container .filter-dropdown .Select-control:hover {
+    border-color: #EC4899 !important;
+}
+
+.page-container .filter-dropdown .Select-control:focus {
+    border-color: #EC4899 !important;
+    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+}
+
+/* Dropdown menu options */
+.page-container .filter-dropdown .Select-menu-outer {
+    max-height: 300px !important;
+    z-index: 9999 !important;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15) !important;
+    border: 1px solid #e4e7eb !important;
+    border-radius: 6px !important;
+}
+
+.page-container .filter-dropdown .Select-menu {
+    max-height: 298px !important;
+}
+
+.page-container .filter-dropdown .Select-option {
+    padding: 12px 16px !important;
+    line-height: 1.5 !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    font-size: 0.95rem !important;
+    color: #2c3e50 !important;
+    background-color: white !important;
+    border-bottom: 1px solid #f8f9fa !important;
+}
+
+.page-container .filter-dropdown .Select-option:last-child {
+    border-bottom: none !important;
+}
+
+.page-container .filter-dropdown .Select-option:hover {
+    background-color: #fce7f3 !important;
+    color: #BE185D !important;
+}
+
+.page-container .filter-dropdown .Select-option.is-focused {
+    background-color: #fce7f3 !important;
+    color: #BE185D !important;
+}
+
+.page-container .filter-dropdown .Select-option.is-selected {
+    background-color: #EC4899 !important;
+    color: white !important;
+}
+
+/* Selected value display */
+.page-container .filter-dropdown .Select-value-label {
+    line-height: 1.4 !important;
+    padding: 8px 0 !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+}
+
+/* Filters row - horizontal layout */
+.page-container .filters-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    border: 1px solid #e4e7eb;
+}
+
+/* Chart container */
+.page-container .chart-container {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+    border: 1px solid #e4e7eb;
+    margin-bottom: 30px;
+}
+
+/* Stats container */
+.page-container .stats-container {
+    margin-top: 30px;
+}
+
+/* Stats grid */
+.page-container .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+/* Stat cards */
+.page-container .stat-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid #e4e7eb;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.page-container .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #EC4899 0%, #BE185D 100%);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.page-container .stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(236, 72, 153, 0.2);
+}
+
+.page-container .stat-card:hover::before {
+    transform: scaleX(1);
+}
+
+/* Stat label */
+.page-container .stat-label {
+    color: #7f8c8d;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+
+/* Stat value (large number) */
+.page-container .stat-value-large {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #EC4899;
+    margin-bottom: 8px;
+    display: block;
+    line-height: 1;
+}
+
+/* Stat sublabel (additional info) */
+.page-container .stat-sublabel {
+    color: #2c3e50;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-top: 8px;
+    display: block;
+}
+
+/* Icon styling */
+.page-container .icon-large {
+    font-size: 3rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* Plotly graph container adjustments */
+.page-container .js-plotly-plot {
+    border-radius: 8px;
+}
+
+/* Loading state */
+.page-container ._dash-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+}
+
+/* Empty state message */
+.page-container .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #7f8c8d;
+}
+
+.page-container .empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.3;
+}
+
+.page-container .empty-state-message {
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .page-container .filters-row {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+    }
+    
+    .page-container .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .page-container .page-title {
+        font-size: 2rem;
+    }
+    
+    .page-container .page-description {
+        font-size: 1rem;
+    }
+    
+    .page-container .filters-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 16px;
+    }
+    
+    .page-container .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .page-container .stat-value-large {
+        font-size: 2rem;
+    }
+    
+    .page-container .chart-container {
+        padding: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-container .page-title {
+        font-size: 1.75rem;
+    }
+    
+    .page-container .icon-large {
+        font-size: 2.5rem;
+    }
+    
+    .page-container .stat-card {
+        padding: 16px;
+    }
+    
+    .page-container .stat-value-large {
+        font-size: 1.75rem;
+    }
+}
+
+/* Animation for stat cards on load */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.page-container .stat-card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.page-container .stat-card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.page-container .stat-card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.page-container .stat-card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.page-container .stat-card:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+/* Hover effect for graph */
+.page-container .chart-container:hover {
+    box-shadow: 0 12px 32px rgba(236, 72, 153, 0.15);
+    transition: box-shadow 0.3s ease;
+}
+
+/* Custom scrollbar for dropdowns */
+.page-container .Select-menu-outer::-webkit-scrollbar {
+    width: 8px;
+}
+
+.page-container .Select-menu-outer::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.page-container .Select-menu-outer::-webkit-scrollbar-thumb {
+    background: #EC4899;
+    border-radius: 4px;
+}
+
+.page-container .Select-menu-outer::-webkit-scrollbar-thumb:hover {
+    background: #BE185D;
+}

@@ -1,0 +1,555 @@
+/* ========================================
+   PROJET PYTHON E4S3 - STYLES DE BASE
+   Styles communs à toutes les pages
+   ======================================== */
+
+/* === Variables === */
+:root {
+    /* Couleurs principales */
+    --color-primary: #3498db;
+    --color-primary-dark: #2980b9;
+    --color-secondary: #2c3e50;
+    --color-success: #27ae60;
+    --color-warning: #e67e22;
+    --color-error: #e74c3c;
+    
+    /* Arrière-plans */
+    --bg-page: linear-gradient(135deg, #f3f4f6, #e0f2f1);
+    --bg-card: #ffffff;
+    
+    /* Textes */
+    --text-dark: #1f2933;
+    --text-primary: #2c3e50;
+    --text-muted: #7f8c8d;
+    
+    /* Bordures */
+    --border-color: #e4e7eb;
+    --border-radius: 12px;
+    
+    /* Ombres */
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+    --shadow-lg: 0 8px 24px rgba(15,23,42,0.12);
+    
+    /* Espacements */
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    
+    /* Transitions */
+    --transition: 0.3s ease;
+}
+
+/* === Reset === */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #f3f4f6, #e0f2f1);
+    color: var(--text-dark);
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 0 16px 40px;
+    margin: 0;
+}
+
+/* === Conteneur principal === */
+.page-container {
+    max-width: 1200px;
+    margin: 60px auto;
+    padding: 32px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+    border: 1px solid #e4e7eb;
+}
+
+.centered-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* === Header === */
+.app-header {
+    max-width: 1200px;
+    margin: 0 auto 32px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 0 0 24px 24px;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.25);
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.app-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+.header-content {
+    position: relative;
+    z-index: 1;
+    padding: 32px 40px;
+    text-align: center;
+}
+
+.header-title {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 700;
+    color: white;
+    margin: 0 0 8px 0;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    letter-spacing: -0.5px;
+}
+
+.header-subtitle {
+    font-size: clamp(0.9rem, 2vw, 1.1rem);
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+    font-weight: 400;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* === Navigation === */
+.app-nav {
+    max-width: 1200px;
+    margin: 0 auto 32px;
+    padding: 16px 24px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+    border: 1px solid #e4e7eb;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    align-items: center;
+}
+
+.nav-link {
+    color: var(--text-primary);
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all var(--transition);
+    background: rgba(52, 152, 219, 0.05);
+    border: 1px solid rgba(52, 152, 219, 0.15);
+}
+
+.nav-link:hover,
+.nav-link:focus {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(52, 152, 219, 0.25);
+    border-color: transparent;
+}
+
+.nav-link.active,
+.nav-link[aria-current="page"] {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+    border-color: transparent;
+}
+
+/* === Footer === */
+.app-footer {
+    max-width: 1200px;
+    margin: 64px auto 0;
+    padding: 0;
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -4px 20px rgba(44, 62, 80, 0.15);
+    color: rgba(255, 255, 255, 0.9);
+    position: relative;
+    overflow: hidden;
+}
+
+.app-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #3498db, #27ae60, #e67e22);
+}
+
+.footer-content {
+    padding: 32px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.footer-info {
+    text-align: center;
+}
+
+.footer-info p {
+    margin: 4px 0;
+}
+
+.footer-info p:first-child {
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+}
+
+.footer-brand {
+    font-weight: 700;
+    background: linear-gradient(135deg, #3498db, #27ae60);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.footer-description {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.7) !important;
+    font-weight: 400;
+}
+
+.footer-links {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.footer-link {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.footer-link:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.footer-separator {
+    color: rgba(255, 255, 255, 0.3);
+    font-weight: 300;
+}
+
+/* === Icônes (emojis) === */
+.icon {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 0.5rem;
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.icon-large {
+    display: block;
+    margin: 0 auto;
+    font-size: 5rem;
+    line-height: 1;
+}
+
+.icon-inline {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 0.35rem;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+/* === Loaders personnalisés === */
+.custom-loader {
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+}
+
+/* Loader de page principal (entre navbar et footer) */
+.page-loader {
+    min-height: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    max-width: 1200px;
+}
+
+/* Dash loading spinner - styles personnalisés */
+._dash-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    position: relative;
+}
+
+._dash-loading-callback {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-direction: column !important;
+    gap: 20px !important;
+    padding: 60px 20px !important;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+    border-radius: 12px;
+    min-height: 450px;
+}
+
+/* Animation du spinner circle */
+._dash-loading-callback > div {
+    position: relative;
+    filter: drop-shadow(0 4px 12px rgba(102, 126, 234, 0.3));
+}
+
+/* Message de chargement pour le loader de page principal */
+#loading-page ._dash-loading-callback::after {
+    content: "Chargement des données...";
+    font-size: 1rem;
+    color: var(--text-primary);
+    font-weight: 600;
+    animation: pulse 1.5s ease-in-out infinite;
+    letter-spacing: 0.5px;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+/* Conteneur de graphique pendant le chargement */
+#evolution-graph, 
+#carte-choropleth {
+    min-height: 450px;
+    transition: opacity 0.3s ease;
+}
+
+/* Conteneur de page avec hauteur minimale */
+#page-content {
+    min-height: 500px;
+    width: 100%;
+}
+
+/* Effet de fondu lors du chargement */
+._dash-loading._dash-loading-is-loading {
+    opacity: 0.7;
+}
+
+/* === Utilitaires de base === */
+.text-center {
+    text-align: center;
+}
+
+.text-muted {
+    color: var(--text-muted);
+}
+
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+.mb-3 { margin-bottom: 24px; }
+.mt-1 { margin-top: 8px; }
+.mt-2 { margin-top: 16px; }
+.mt-3 { margin-top: 24px; }
+
+/* === Responsive === */
+@media (max-width: 768px) {
+    body {
+        padding: 0 8px 24px;
+    }
+    
+    .page-container {
+        margin: 24px auto;
+        padding: 20px;
+    }
+    
+    .app-header {
+        border-radius: 0 0 16px 16px;
+        margin-bottom: 24px;
+    }
+    
+    .header-content {
+        padding: 24px 20px;
+    }
+    
+    .header-title {
+        font-size: 1.5rem;
+    }
+    
+    .header-subtitle {
+        font-size: 0.85rem;
+    }
+    
+    .app-footer {
+        border-radius: 16px 16px 0 0;
+        margin-top: 48px;
+    }
+    
+    .footer-content {
+        padding: 24px 20px;
+    }
+    
+    .app-nav {
+        padding: 12px 16px;
+        gap: 8px;
+        margin-bottom: 24px;
+    }
+    
+    .nav-link {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+    
+    header, nav, footer {
+        padding: 16px;
+        margin-left: 8px;
+        margin-right: 8px;
+    }
+    
+    nav {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    nav a {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-container {
+        margin: 16px auto;
+        padding: 16px;
+    }
+}
+
+/* === Styles globaux pour dropdowns (Dash dcc.Dropdown) === */
+/* Menu déroulant */
+.Select-menu-outer {
+    max-height: 300px !important;
+    z-index: 9999 !important;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15) !important;
+    border: 1px solid #e4e7eb !important;
+    border-radius: 6px !important;
+    margin-top: 4px !important;
+}
+
+.Select-menu {
+    max-height: 298px !important;
+    border-radius: 6px !important;
+}
+
+/* Options dans le menu */
+.Select-option {
+    padding: 12px 16px !important;
+    line-height: 1.5 !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    font-size: 0.95rem !important;
+    color: #2c3e50 !important;
+    background-color: white !important;
+    border-bottom: 1px solid #f8f9fa !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.Select-option:last-child {
+    border-bottom: none !important;
+}
+
+.Select-option:hover,
+.Select-option.is-focused {
+    background-color: #fce7f3 !important;
+    color: #BE185D !important;
+}
+
+.Select-option.is-selected {
+    background-color: #EC4899 !important;
+    color: white !important;
+    font-weight: 600 !important;
+}
+
+/* Valeur sélectionnée affichée */
+.Select-value-label {
+    line-height: 1.4 !important;
+    padding: 8px 0 !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    max-width: 100% !important;
+}
+
+/* Contrôle du dropdown */
+.Select-control {
+    min-height: 42px !important;
+    border-radius: 6px !important;
+    border: 2px solid #e4e7eb !important;
+    transition: border-color 0.3s ease !important;
+}
+
+.Select-control:hover {
+    border-color: #667eea !important;
+}
+
+.Select-control.is-focused {
+    border-color: #667eea !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+}
+
+/* Placeholder */
+.Select-placeholder {
+    color: #95a5a6 !important;
+    padding: 8px 0 !important;
+}
+
+/* Flèche du dropdown */
+.Select-arrow-zone {
+    padding: 0 8px !important;
+}
+
+/* Scrollbar personnalisée pour les menus */
+.Select-menu-outer::-webkit-scrollbar {
+    width: 8px;
+}
+
+.Select-menu-outer::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.Select-menu-outer::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 4px;
+}
+
+.Select-menu-outer::-webkit-scrollbar-thumb:hover {
+    background: #5568d3;
+}
