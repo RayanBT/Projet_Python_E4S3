@@ -6,19 +6,28 @@ import plotly.graph_objects as go
 from src.utils.db_queries import get_evolution_pathologies, get_liste_pathologies
 from src.components.icons import icon_chart_bar, icon_pin
 
-def create_evolution_figure(debut_annee=2019, fin_annee=2023, pathologie=None, region=None):
+def create_evolution_figure(debut_annee=2019, fin_annee=2023, pathologies=None, region=None):
     """Crée le graphique d'évolution temporelle des pathologies.
     
     Args:
         debut_annee (int): Année de début
         fin_annee (int): Année de fin
-        pathologie (str, optional): Pathologie spécifique à filtrer
+        pathologies (list, optional): Liste des pathologies à afficher
         region (str, optional): Région spécifique à filtrer
         
     Returns:
         plotly.graph_objects.Figure: Figure du graphique d'évolution
     """
-    df = get_evolution_pathologies(debut_annee, fin_annee, pathologie, region)
+    # Si pathologies est une chaîne unique, la convertir en liste
+    if isinstance(pathologies, str):
+        pathologies = [pathologies]
+    
+    # Obtenir toutes les données
+    df = get_evolution_pathologies(debut_annee, fin_annee, None, region)
+    
+    # Filtrer pour les pathologies sélectionnées si nécessaire
+    if pathologies:
+        df = df[df["patho_niv1"].isin(pathologies)]
     
     if df.empty:
         # Créer une figure vide avec un message
@@ -101,40 +110,43 @@ def layout():
         html.Div(className="card", children=[
             html.Div(className="flex-controls", children=[
                 # Sélection de la période
-                html.Div([
+                html.Div(className="filter-section period-filter", children=[
                     html.Label("Période d'analyse", className="form-label"),
-                    html.Div(className="d-flex", style={'gap': '12px'}, children=[
-                        html.Div(style={'flex': '1'}, children=[
-                            html.Label("De :", className="form-sublabel"),
-                            dcc.Dropdown(
-                                id='evolution-debut-annee',
-                                options=[{'label': str(year), 'value': year} for year in range(2019, 2024)],
-                                value=2019,
-                                clearable=False,
-                            )
-                        ]),
-                        html.Div(style={'flex': '1'}, children=[
-                            html.Label("À :", className="form-sublabel"),
-                            dcc.Dropdown(
-                                id='evolution-fin-annee',
-                                options=[{'label': str(year), 'value': year} for year in range(2019, 2024)],
-                                value=2023,
-                                clearable=False,
-                            )
-                        ])
+                    html.Div(className="filter-content", children=[
+                        dcc.RangeSlider(
+                            id='evolution-periode-slider',
+                            min=2019,
+                            max=2023,
+                            value=[2019, 2023],
+                            marks={str(year): str(year) for year in range(2019, 2024)},
+                            step=None,
+                            className="period-slider"
+                        ),
+                        html.Div(
+                            id='periode-display',
+                            className="period-display"
+                        )
                     ])
                 ]),
                 
-                # Sélection de la pathologie
-                html.Div([
-                    html.Label("Pathologie", className="form-label"),
-                    dcc.Dropdown(
-                        id='evolution-pathologie-dropdown',
-                        options=[{'label': 'Toutes les pathologies', 'value': 'ALL'}] + 
-                                [{'label': p, 'value': p} for p in pathologies],
-                        value='ALL',
-                        clearable=False,
-                    )
+                # Sélection des pathologies (jusqu'à 5)
+                html.Div(className="filter-section pathologies-filter", children=[
+                    html.Label("Pathologies", className="form-label"),
+                    html.Div(className="filter-content", children=[
+                        dcc.Dropdown(
+                            id='evolution-pathologie-dropdown',
+                            options=[{'label': p, 'value': p} for p in pathologies],
+                            value=[],  # Aucune sélection par défaut = toutes les pathologies
+                            multi=True,  # Active la sélection multiple
+                            placeholder="Sélectionnez des pathologies (max. 5)",
+                            clearable=True,
+                            className="pathologies-dropdown"
+                        ),
+                        html.Div(
+                            id='pathologie-warning',
+                            className="filter-warning"
+                        )
+                    ])
                 ])
             ])
         ]),
@@ -192,40 +204,58 @@ def layout():
     ])
 
 @callback(
-    Output('evolution-graph', 'figure'),
-    [Input('evolution-debut-annee', 'value'),
-     Input('evolution-fin-annee', 'value'),
+    [Output('evolution-graph', 'figure'),
+     Output('pathologie-warning', 'children'),
+     Output('evolution-pathologie-dropdown', 'value'),
+     Output('periode-display', 'children')],
+    [Input('evolution-periode-slider', 'value'),
      Input('evolution-pathologie-dropdown', 'value')]
 )
-def update_evolution(debut_annee, fin_annee, pathologie):
+def update_evolution(periode, pathologies):
     """Met à jour le graphique d'évolution.
     
     Args:
-        debut_annee (int): Année de début
-        fin_annee (int): Année de fin
-        pathologie (str): Pathologie sélectionnée
+        periode (list): Liste contenant l'année de début et de fin [debut, fin]
+        pathologies (list): Liste des pathologies sélectionnées
         
     Returns:
-        plotly.graph_objects.Figure: Figure mise à jour
+        tuple: (Figure mise à jour, Message d'avertissement, Valeurs de sélection validées, Texte période)
     """
-    # Vérifier que la période est valide
-    if debut_annee > fin_annee:
-        debut_annee, fin_annee = fin_annee, debut_annee
+    debut_annee, fin_annee = periode
     
-    patho_filter = None if pathologie == 'ALL' else pathologie
-    return create_evolution_figure(debut_annee, fin_annee, patho_filter)
+    warning = ""
+    # Préparer le texte d'affichage de la période
+    periode_text = f"De {debut_annee} à {fin_annee}"
+    
+    # Si la liste est vide, afficher toutes les pathologies
+    if not pathologies:
+        figure = create_evolution_figure(debut_annee, fin_annee, None)
+        return figure, warning, [], periode_text
+    
+    # Si plus de 5 pathologies sont sélectionnées, garder les 5 premières
+    if len(pathologies) > 5:
+        pathologies = pathologies[:5]
+        warning = "Maximum 5 pathologies peuvent être sélectionnées"
+    
+    # Créer une figure avec les pathologies sélectionnées
+    figure = create_evolution_figure(debut_annee, fin_annee, pathologies)
+    
+    return figure, warning, pathologies, periode_text
 
 @callback(
     Output('evolution-stats', 'children'),
-    [Input('evolution-graph', 'figure')]
+    [Input('evolution-graph', 'figure'),
+     Input('evolution-pathologie-dropdown', 'value')]
 )
-def update_stats(figure):
+def update_stats(figure, selected_pathologies):
     """Met à jour les statistiques affichées."""
     if not figure or 'data' not in figure or not figure['data']:
         return html.P("Aucune donnée disponible", className="text-center text-muted")
 
+    yearly_totals = {}  # {année_index: total}
+    total_values = []  # Pour stocker toutes les valeurs pour le calcul de la moyenne
     stats_components = []
-
+    
     for trace in figure['data']:
         try:
             # Obtenir le nom de la pathologie
@@ -241,25 +271,27 @@ def update_stats(figure):
             # Extraire uniquement les valeurs numériques en ignorant les métadonnées
             i = 0
             while True:
-                # On s'arrête quand on ne trouve plus d'index numérique
                 if str(i) not in input_array:
                     break
                     
                 try:
-                    # Convertir uniquement les valeurs numériques
                     value = float(input_array[str(i)])
                     values.append(value)
+                    
+                    # Si aucune sélection spécifique, accumuler pour les stats globales
+                    if not selected_pathologies:
+                        yearly_totals[i] = yearly_totals.get(i, 0) + value
+                        total_values.append(value)
                 except (ValueError, TypeError):
                     pass
                 i += 1
             
-            # Calculer les statistiques si nous avons au moins 2 points
-            if len(values) >= 2:
+            # Si des pathologies sont sélectionnées, afficher leurs statistiques
+            if selected_pathologies and len(values) >= 2:
                 total = sum(values)
                 moyenne = total / len(values)
                 evolution = ((values[-1] - values[0]) / values[0] * 100) if values[0] != 0 else 0
                 
-                # Créer la carte de statistiques
                 stats_components.append(
                     html.Div(
                         className="stat-card",
@@ -294,6 +326,46 @@ def update_stats(figure):
         except Exception as e:
             print(f"Erreur lors du traitement de la pathologie {patho_name}: {str(e)}")
             continue
+    
+    # Si aucune pathologie n'est sélectionnée, créer une carte de statistiques globales
+    if not selected_pathologies and yearly_totals:
+        total_global = sum(total_values)
+        moyenne_globale = total_global / (len(yearly_totals) * len(figure['data']))
+        evolution_globale = ((yearly_totals[max(yearly_totals.keys())] - yearly_totals[0]) / yearly_totals[0] * 100)
+        
+        stats_components = [html.Div(
+            className="stat-card",
+            children=[
+                html.H4("Statistiques Globales", className="stat-title"),
+                html.Div(
+                    className="stat-details",
+                    children=[
+                        html.Div([
+                            html.Strong("Total toutes pathologies : "),
+                            html.Span(f"{total_global:,.0f} cas")
+                        ], className="mb-2"),
+                        html.Div([
+                            html.Strong("Moyenne annuelle globale : "),
+                            html.Span(f"{moyenne_globale:,.0f} cas")
+                        ], className="mb-2"),
+                        html.Div([
+                            html.Strong("Évolution globale : "),
+                            html.Span(
+                                f"{evolution_globale:+.1f}%",
+                                style={
+                                    'color': '#27ae60' if evolution_globale >= 0 else '#e74c3c',
+                                    'fontWeight': 'bold'
+                                }
+                            )
+                        ], className="mb-2"),
+                        html.Div([
+                            html.Strong("Nombre de pathologies : "),
+                            html.Span(f"{len(figure['data'])}")
+                        ], className="mb-2")
+                    ]
+                )
+            ]
+        )]
     
     return html.Div(
         className="stats-grid",

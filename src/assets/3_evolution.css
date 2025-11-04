@@ -21,23 +21,160 @@
 /* Card styling */
 .page-container .card {
     background-color: white;
-    padding: 20px;
+    padding: 15px;  /* Réduit de 20px à 15px */
     border-radius: 10px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 30px;
+    margin-bottom: 20px;  /* Réduit de 30px à 20px */
 }
 
 /* Flex controls */
 .page-container .flex-controls {
     display: flex;
     flex-wrap: wrap;
-    gap: 24px;
-    align-items: flex-end;
+    gap: 16px;  /* Réduit de 24px à 16px */
+    align-items: flex-start;
 }
 
 .page-container .flex-controls > div {
-    flex: 1 1 calc(50% - 24px);
-    min-width: 280px;
+    flex: 1 1 calc(33.33% - 16px);
+    min-width: 250px;  /* Réduit de 280px à 250px */
+}
+
+/* Filter sections */
+.page-container .filter-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;  /* Réduit de 8px à 6px */
+}
+
+.page-container .filter-content {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+/* Period filter */
+.page-container .period-filter {
+    flex: 1 1 100% !important;
+    margin-bottom: 8px;  /* Réduit de 10px à 8px */
+}
+
+.page-container .period-slider {
+    padding: 0 8px;  /* Réduit de 10px à 8px */
+    margin-top: 15px;  /* Réduit de 20px à 15px */
+}
+
+/* Style des marques du slider */
+.page-container .period-slider .rc-slider-mark-text {
+    color: #2c3e50;
+    font-weight: 500;
+    font-size: 0.9rem;  /* Ajouté pour réduire la taille du texte */
+}
+
+/* Style du rail du slider */
+.page-container .period-slider .rc-slider-rail {
+    background-color: #e2e8f0;
+    height: 3px;  /* Réduit de 4px à 3px */
+}
+
+/* Style de la trace du slider */
+.page-container .period-slider .rc-slider-track {
+    background-color: #3498db;
+    height: 3px;  /* Réduit de 4px à 3px */
+}
+
+/* Style des handles du slider */
+.page-container .period-slider .rc-slider-handle {
+    border: solid 2px #3498db;
+    background-color: white;
+    width: 14px;  /* Réduit de 16px à 14px */
+    height: 14px;  /* Réduit de 16px à 14px */
+    margin-top: -6px;
+    opacity: 1;
+}
+
+.page-container .period-slider .rc-slider-handle:hover {
+    border-color: #2980b9;
+}
+
+.page-container .period-slider .rc-slider-handle:active {
+    border-color: #2980b9;
+}
+
+/* Style du dropdown de pathologies */
+.page-container .pathologies-dropdown {
+    max-width: 100%;
+}
+
+/* Style du menu déroulant du dropdown */
+.page-container .pathologies-dropdown .Select-menu-outer {
+    max-height: 200px;
+}
+
+/* Style du conteneur de sélection */
+.page-container .pathologies-dropdown .Select-control {
+    height: 34px;
+    min-height: 34px;
+}
+
+/* Style du texte dans le dropdown */
+.page-container .pathologies-dropdown .Select-placeholder,
+.page-container .pathologies-dropdown .Select-value {
+    line-height: 32px;
+    font-size: 0.9rem;
+}
+
+/* Style des options dans le menu */
+.page-container .pathologies-dropdown .VirtualizedSelectOption {
+    font-size: 0.9rem;
+    padding: 6px 10px;
+}
+
+/* Affichage de la période */
+.page-container .period-display {
+    font-size: 0.9rem;
+    color: #666;
+    text-align: center;
+    margin-top: 5px;
+}
+
+/* Style des labels */
+.page-container .form-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+/* Style des avertissements */
+.page-container .filter-warning {
+    font-size: 0.85rem;
+    color: #e74c3c;
+}
+    box-shadow: 0 0 5px rgba(41, 128, 185, 0.5);
+}
+
+.page-container .period-display {
+    text-align: center;
+    color: #2c3e50;
+    font-weight: 500;
+    margin-top: 8px;
+    font-size: 0.9rem;
+}
+
+/* Pathologies filter specific */
+.page-container .pathologies-filter {
+    flex: 2 1 calc(66.66% - 24px) !important;  /* Prend plus d'espace */
+}
+
+.page-container .pathologies-dropdown {
+    width: 100%;
+}
+
+.page-container .filter-warning {
+    color: #e74c3c;
+    font-size: 0.8rem;
+    font-style: italic;
+    margin-top: 4px;
 }
 
 /* Form labels */
