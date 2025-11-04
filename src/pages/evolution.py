@@ -220,57 +220,85 @@ def update_evolution(debut_annee, fin_annee, pathologie):
     [Input('evolution-graph', 'figure')]
 )
 def update_stats(figure):
-    """Met à jour les statistiques affichées.
-    
-    Args:
-        figure (dict): Données du graphique actuel
-        
-    Returns:
-        list: Composants HTML des statistiques
-    """
+    """Met à jour les statistiques affichées."""
     if not figure or 'data' not in figure or not figure['data']:
         return html.P("Aucune donnée disponible", className="text-center text-muted")
-    
+
     stats_components = []
-    
-    # Calculer des statistiques pour chaque pathologie
+
     for trace in figure['data']:
-        if 'y' in trace and trace['y']:
+        try:
+            # Obtenir le nom de la pathologie
             patho_name = trace.get('name', 'Inconnue')
-            values = [v for v in trace['y'] if v is not None]
             
-            if values:
+            # Extraire les valeurs numériques uniquement
+            if 'y' not in trace or not isinstance(trace['y'], dict) or '_inputArray' not in trace['y']:
+                continue
+                
+            input_array = trace['y']['_inputArray']
+            values = []
+            
+            # Extraire uniquement les valeurs numériques en ignorant les métadonnées
+            i = 0
+            while True:
+                # On s'arrête quand on ne trouve plus d'index numérique
+                if str(i) not in input_array:
+                    break
+                    
+                try:
+                    # Convertir uniquement les valeurs numériques
+                    value = float(input_array[str(i)])
+                    values.append(value)
+                except (ValueError, TypeError):
+                    pass
+                i += 1
+            
+            # Calculer les statistiques si nous avons au moins 2 points
+            if len(values) >= 2:
                 total = sum(values)
                 moyenne = total / len(values)
                 evolution = ((values[-1] - values[0]) / values[0] * 100) if values[0] != 0 else 0
                 
+                # Créer la carte de statistiques
                 stats_components.append(
-                    html.Div(className="stat-card", children=[
-                        html.H4(patho_name, className="stat-label"),
-                        html.Div([
-                            html.Div([
-                                html.Strong("Total : "),
-                                f"{total:,.0f} cas"
-                            ], className="mb-1"),
-                            html.Div([
-                                html.Strong("Moyenne annuelle : "),
-                                f"{moyenne:,.0f} cas"
-                            ], className="mb-1"),
-                            html.Div([
-                                html.Strong("Évolution : "),
-                                html.Span(
-                                    f"{evolution:+.1f}%",
-                                    style={
-                                        'color': '#27ae60' if evolution >= 0 else '#e74c3c',
-                                        'fontWeight': 'bold'
-                                    }
-                                )
-                            ])
-                        ])
-                    ])
+                    html.Div(
+                        className="stat-card",
+                        children=[
+                            html.H4(patho_name, className="stat-title"),
+                            html.Div(
+                                className="stat-details",
+                                children=[
+                                    html.Div([
+                                        html.Strong("Total : "),
+                                        html.Span(f"{total:,.0f} cas")
+                                    ], className="mb-2"),
+                                    html.Div([
+                                        html.Strong("Moyenne annuelle : "),
+                                        html.Span(f"{moyenne:,.0f} cas")
+                                    ], className="mb-2"),
+                                    html.Div([
+                                        html.Strong("Évolution : "),
+                                        html.Span(
+                                            f"{evolution:+.1f}%",
+                                            style={
+                                                'color': '#27ae60' if evolution >= 0 else '#e74c3c',
+                                                'fontWeight': 'bold'
+                                            }
+                                        )
+                                    ], className="mb-2")
+                                ]
+                            )
+                        ]
+                    )
                 )
+        except Exception as e:
+            print(f"Erreur lors du traitement de la pathologie {patho_name}: {str(e)}")
+            continue
     
-    return stats_components if stats_components else html.P(
-        "Aucune statistique disponible", 
-        className="text-center text-muted"
+    return html.Div(
+        className="stats-grid",
+        children=stats_components if stats_components else html.P(
+            "Aucune statistique disponible",
+            className="text-center text-muted"
+        )
     )
