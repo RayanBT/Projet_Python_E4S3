@@ -1,0 +1,193 @@
+/* ========================================
+   STYLES SPÉCIFIQUES - PAGE RADAR
+   ======================================== */
+
+/* Page header with icon */
+.page-container .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 10px;
+}
+
+/* Page title */
+.page-container .page-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #2c3e50;
+    text-align: center;
+    margin: 0;
+}
+
+/* Page description */
+.page-container .page-description {
+    text-align: center;
+    color: #7f8c8d;
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+    line-height: 1.6;
+}
+
+/* Card styling */
+.page-container .card {
+    background-color: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    margin-bottom: 20px;
+    border: 1px solid #e4e7eb;
+    transition: all 0.3s ease;
+}
+
+.page-container .card:hover {
+    box-shadow: 0 8px 24px rgba(236, 72, 153, 0.15);
+}
+
+/* Flex controls */
+.page-container .flex-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+/* Filter sections */
+.page-container .filter-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Filter labels */
+.page-container .filter-section label {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #2c3e50;
+}
+
+/* Dropdown styling */
+.page-container .filter-dropdown .Select-control {
+    border-radius: 6px !important;
+    border: 2px solid #e4e7eb !important;
+    min-height: 42px !important;
+    transition: border-color 0.3s ease;
+}
+
+.page-container .filter-dropdown .Select-control:hover {
+    border-color: #EC4899 !important;
+}
+
+.page-container .filter-dropdown .Select-control:focus {
+    border-color: #EC4899 !important;
+    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+}
+
+/* Dropdown menu options */
+.page-container .filter-dropdown .Select-menu-outer {
+    max-height: 300px !important;
+    z-index: 9999 !important;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15) !important;
+    border: 1px solid #e4e7eb !important;
+    border-radius: 6px !important;
+}
+
+.page-container .filter-dropdown .Select-option {
+    padding: 12px 16px !important;
+    font-size: 0.95rem !important;
+    color: #2c3e50 !important;
+    background-color: white !important;
+    border-bottom: 1px solid #f8f9fa !important;
+}
+
+.page-container .filter-dropdown .Select-option:hover,
+.page-container .filter-dropdown .Select-option.is-focused {
+    background-color: #fce7f3 !important;
+    color: #BE185D !important;
+}
+
+.page-container .filter-dropdown .Select-option.is-selected {
+    background-color: #EC4899 !important;
+    color: white !important;
+}
+
+/* Selected value display */
+.page-container .filter-dropdown .Select-value-label {
+    line-height: 1.4 !important;
+    padding: 8px 0 !important;
+}
+
+/* Year slider styling */
+.page-container .year-slider {
+    margin-top: 10px;
+}
+
+.page-container .year-slider .rc-slider-rail {
+    background-color: #e2e8f0;
+    height: 4px;
+}
+
+.page-container .year-slider .rc-slider-track {
+    background-color: #3498db;
+    height: 4px;
+}
+
+.page-container .year-slider .rc-slider-handle {
+    border: solid 2px #3498db;
+    background-color: white;
+    width: 16px;
+    height: 16px;
+    margin-top: -6px;
+    opacity: 1;
+}
+
+.page-container .year-slider .rc-slider-handle:hover,
+.page-container .year-slider .rc-slider-handle:active {
+    border-color: #2980b9;
+}
+
+/* Graph container */
+.page-container dcc-graph,
+.page-container .chart-container {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+    border: 1px solid #e4e7eb;
+}
+
+/* Empty state message */
+.page-container .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #7f8c8d;
+}
+
+/* Icon styling */
+.icon-inline {
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .page-container .page-title {
+        font-size: 2rem;
+    }
+    
+    .page-container .filters-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 16px;
+    }
+    
+    .page-container .chart-container {
+        padding: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-container .page-title {
+        font-size: 1.75rem;
+    }
+}

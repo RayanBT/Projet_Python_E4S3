@@ -48,6 +48,11 @@ def icon_warning(class_name="icon"):
     return html.Span("⚠️", className=class_name)
 
 
+def icon_chart_spider(class_name="icon"):
+    """Icône Graphique en toile d'araignée/radar."""
+    return html.Span("🕸️", className=class_name)
+
+
 def icon_close(class_name="icon"):
     """Icône Fermer/Erreur."""
     return html.Span("❌", className=class_name)

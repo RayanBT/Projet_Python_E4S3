@@ -19,6 +19,7 @@ import src.pages.evolution as evolution_module
 import src.pages.dashboard as dashboard_module
 import src.pages.accueil as accueil_module
 import src.pages.histogramme as histogramme_module
+import src.pages.radar as radar_module
 
 COMPLETION_DELAY = 2.0
 
@@ -123,6 +124,8 @@ def create_app(init_state: InitializationState) -> Dash:
             return evolution_module.layout()
         if pathname == "/histogramme":
             return histogramme_module.layout()
+        if pathname == "/radar":
+            return radar_module.layout()
         if pathname == "/dashboard":
             return dashboard_module.layout()
         if pathname == "/about":
