@@ -176,8 +176,8 @@ def create_choropleth_html(
         OVERSEAS_CENTER_ZOOM: dict = {
             "Guadeloupe": (16.2650, -61.5510, 8),
             "Martinique": (14.6415, -61.0242, 8),
-            "Guyane": (3.9339, -53.1258, 6),
-            "La Réunion": (-21.1151, 55.5364, 6),
+            "Guyane": (3.9339, -53.1258, 7),
+            "La Réunion": (-21.1151, 55.5364, 8),
             "Mayotte": (-12.8275, 45.1662, 8),
         }
 
@@ -621,14 +621,27 @@ def layout():
                                     clearable=False,
                                 ),
                             ]),
-                            html.Div([
+                            html.Div(className="zone-control", children=[
                                 # Store to hold zone selection
                                 dcc.Store(id="carte-zone-store", data={"scope": "france", "selected": None}),
 
                                 html.Div(
                                     className="zone-dropdown",
                                     children=[
-                                        html.Button("Zone ▾", className="zone-btn", id="zone-main-btn"),
+                                        html.Div(
+                                            className="zone-trigger",
+                                            children=[
+                                                html.Div("Zone", className="zone-main-label"),
+                                                html.Button(
+                                                    [
+                                                        html.Span("Toute la France", className="zone-main-selected"),
+                                                        html.Span(" ▾", className="zone-main-caret"),
+                                                    ],
+                                                    className="zone-btn",
+                                                    id="zone-main-btn",
+                                                ),
+                                            ],
+                                        ),
                                         html.Div(
                                             className="zone-menu",
                                             children=[
@@ -716,6 +729,30 @@ def _zone_menu_click(france, metropole, outremer, gua, mar, guy, rei, may):
     if trig == "zone-om-Mayotte":
         return {"scope": "outre-mer-select", "selected": "Mayotte"}
     return {"scope": "france", "selected": None}
+
+
+
+@callback(
+    Output("zone-main-btn", "children"),
+    Input("carte-zone-store", "data"),
+)
+def _update_zone_main_button(zone_store: dict):
+    """Met à jour le texte affiché dans le bouton principal pour refléter la sélection."""
+    scope = zone_store.get("scope") if isinstance(zone_store, dict) else "france"
+    selected = zone_store.get("selected") if isinstance(zone_store, dict) else None
+
+    if scope == "france":
+        label = "Toute la France"
+    elif scope == "metropole":
+        label = "Métropole"
+    elif scope == "outre-mer":
+        label = "Outre-Mer (tous)"
+    elif scope == "outre-mer-select" and selected:
+        label = selected
+    else:
+        label = "Toute la France"
+
+    return [html.Span(label, className="zone-main-selected"), html.Span(" ▾", className="zone-main-caret")]
 
 
 @callback(

@@ -4,13 +4,28 @@
 }
 
 .zone-dropdown .zone-btn {
-  background-color: #2c3e50;
+  /* Replicate the project primary/secondary button styling (use secondary look)
+     to match other page buttons */
+  background-color: #95a5a6; /* same as .btn-secondary */
   color: white;
-  padding: 8px 12px;
+  padding: 12px 25px;
   border: none;
-  border-radius: 4px;
+  border-radius: 5px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 1rem;
+  min-width: 240px; /* match other controls min width */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+  margin-top: 20px; /* match other buttons spacing */
+}
+
+.zone-dropdown .zone-btn:hover {
+  background-color: #7f8c8d; /* same darker tone as .btn-secondary:hover */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(149, 165, 166, 0.3);
 }
 
 .zone-dropdown .zone-menu {
@@ -70,4 +85,32 @@
 
 .zone-menu .submenu .zone-item {
   white-space: nowrap;
+}
+
+.zone-main-selected {
+  font-weight: 400; /* ne pas être en gras */
+  color: white; /* white text to match the button */
+}
+
+.zone-main-caret {
+  margin-left: 12px;
+  color: white;
+}
+
+.zone-main-label {
+  font-size: 12px;
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 6px;
+  font-weight: 700; /* 'Zone' en gras */
+}
+
+/* Align zone control to the right inside the flex-controls and reduce its flex so it doesn't expand */
+.page-container .flex-controls > .zone-control {
+  /* Keep the control from growing, push it to the far right and align it to the bottom
+     so it visually lines up with other buttons in the controls bar */
+  flex: 0 0 auto;
+  margin-left: auto;
+  align-self: flex-end; /* ensure bottom alignment inside .flex-controls */
+  min-width: 240px; /* consistent with other controls */
 }
