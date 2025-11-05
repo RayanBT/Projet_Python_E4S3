@@ -9,15 +9,16 @@ from typing import Dict, Tuple
 
 import folium
 import pandas as pd
-from dash import Input, Output, callback, dcc, html
+from dash import Input, Output, callback, dcc, html, callback_context
+from dash.exceptions import PreventUpdate
 
 from src.utils.db_queries import get_liste_pathologies, get_pathologies_par_region, get_pathologies_par_departement
 from src.utils.geo_reference import get_dept_to_region_mapping, get_all_regions
 
-# Nouveaux fichiers GeoJSON simplifiés (légers et performants)
-GEOJSON_REGIONS_PATH = Path("data/geolocalisation/regions-version-simplifiee.geojson")
-GEOJSON_DEPARTEMENTS_PATH = Path("data/geolocalisation/departements-version-simplifiee.geojson")
-FRANCE_CENTER: Tuple[float, float] = (46.603354, 1.888334)
+# GeoJSON simplifiés incluant les territoires d'outre-mer
+GEOJSON_REGIONS_PATH = Path("data/geolocalisation/regions-avec-outre-mer.geojson")
+GEOJSON_DEPARTEMENTS_PATH = Path("data/geolocalisation/departements-avec-outre-mer.geojson")
+FRANCE_CENTER: Tuple[float, float] = (46.603354, 1.888334) # Coordonnées optimales la métropole
 FRANCE_ZOOM: int = 6  # Zoom optimal pour voir toute la France
 
 
@@ -44,9 +45,9 @@ def _load_geojson_by_level(level: str) -> dict | None:
     """
     try:
         if level == "region":
-            # Charger le fichier régions simplifié (220 Ko, 13 régions)
+            # Charger le fichier régions avec outre-mer (1,66 Mo, 18 régions)
             if GEOJSON_REGIONS_PATH.exists():
-                print(f"✅ Chargement des RÉGIONS (fichier simplifié)")
+                print(f"✅ Chargement des RÉGIONS (fichier simplifié mais avec outre-mer)")
                 with GEOJSON_REGIONS_PATH.open("r", encoding="utf-8") as f:
                     return json.load(f)
             else:
@@ -56,7 +57,7 @@ def _load_geojson_by_level(level: str) -> dict | None:
         elif level == "departement":
             # Charger le fichier départements simplifié (556 Ko, 96 départements)
             if GEOJSON_DEPARTEMENTS_PATH.exists():
-                print(f"✅ Chargement des DÉPARTEMENTS (fichier simplifié)")
+                print(f"✅ Chargement des DÉPARTEMENTS (fichier simplifié mais avec outre-mer)")
                 with GEOJSON_DEPARTEMENTS_PATH.open("r", encoding="utf-8") as f:
                     return json.load(f)
             else:
@@ -73,10 +74,12 @@ def _load_geojson_by_level(level: str) -> dict | None:
 
 
 def create_choropleth_html(
-    annee: int, 
-    pathologie: str | None, 
+    annee: int,
+    pathologie: str | None,
     niveau_geo: str = "region",
-    indicateur: str = "prevalence"
+    indicateur: str = "prevalence",
+    zone_scope: str = "france",  # 'france' | 'outre-mer' | 'outre-mer-select'
+    outremer_selected: str | None = None,  # Nom de la région d'outre-mer si spécifique
 ) -> tuple[str, pd.DataFrame]:
     """Crée une carte choroplèthe Folium et retourne le HTML + DataFrame.
     
@@ -167,17 +170,79 @@ def create_choropleth_html(
             """
             return error_html, df
 
+        # Appliquer le filtrage par zone (Toute la France / Outre-Mer / Région Outre-Mer)
+        # et définir le centre/zoom de la carte en conséquence
+        OVERSEAS_NAMES = {"Guadeloupe", "Martinique", "Guyane", "La Réunion", "Mayotte"}
+        OVERSEAS_CENTER_ZOOM: dict = {
+            "Guadeloupe": (16.2650, -61.5510, 8),
+            "Martinique": (14.6415, -61.0242, 8),
+            "Guyane": (3.9339, -53.1258, 6),
+            "La Réunion": (-21.1151, 55.5364, 6),
+            "Mayotte": (-12.8275, 45.1662, 8),
+        }
+
+        # Filter dataframe according to zone_scope
+        try:
+            if zone_scope == "outre-mer":
+                # Keep only overseas entries
+                if niveau_geo == "departement":
+                    df = df[df[geo_column].str.startswith("97") | df[geo_column].isin(["971", "972", "973", "974", "976"])].copy()
+                else:
+                    # region-level: find region codes corresponding to overseas names in geojson
+                    region_geo = geo_data
+                    overseas_codes = [str(f["properties"]["code"]) for f in region_geo["features"] if f["properties"].get("nom") in OVERSEAS_NAMES]
+                    df = df[df[geo_column].isin(overseas_codes)].copy()
+
+            elif zone_scope == "metropole":
+                # Exclude overseas entries
+                if niveau_geo == "departement":
+                    df = df[~(df[geo_column].str.startswith("97") | df[geo_column].isin(["971", "972", "973", "974", "976"]))].copy()
+                else:
+                    region_geo = geo_data
+                    overseas_codes = [str(f["properties"]["code"]) for f in region_geo["features"] if f["properties"].get("nom") in OVERSEAS_NAMES]
+                    df = df[~df[geo_column].isin(overseas_codes)].copy()
+
+            elif zone_scope == "outre-mer-select" and outremer_selected:
+                # Specific overseas region selected
+                selected = outremer_selected
+                if niveau_geo == "departement":
+                    # translate region name -> list of dept codes via mapping
+                    dept_to_region = get_dept_to_region_mapping()
+                    dept_codes = [k for k, v in dept_to_region.items() if v == selected]
+                    df = df[df[geo_column].isin(dept_codes)].copy()
+                else:
+                    # region-level: map selected region name to its geojson code
+                    region_geo = geo_data
+                    sel_codes = [str(f["properties"]["code"]) for f in region_geo["features"] if f["properties"].get("nom") == selected]
+                    df = df[df[geo_column].isin(sel_codes)].copy()
+        except Exception as e:
+            print(f"⚠️ Erreur lors du filtrage par zone: {e}")
+
         # Création de la carte Folium
         try:
+            # Déterminer centre et zoom selon la sélection
+            map_center = FRANCE_CENTER
+            map_zoom = FRANCE_ZOOM
+            if zone_scope == "outre-mer":
+                # Centrer sur une vue agrégée des outre-mer : utiliser le centre de la France pour voir métropole + outre-mer
+                # mais zoomer légèrement pour rendre les îles visibles si elles sont seules affichées
+                lat, lon, z = OVERSEAS_CENTER_ZOOM["Guyane"]
+                map_center = (lat, lon)
+                map_zoom = 4 #choix d'un zoom peu important pour entrevoir tous les territoires 
+            elif zone_scope == "outre-mer-select" and outremer_selected in OVERSEAS_CENTER_ZOOM:
+                lat, lon, z = OVERSEAS_CENTER_ZOOM[outremer_selected]
+                map_center = (lat, lon)
+                map_zoom = z
+
             fmap = folium.Map(
-                location=FRANCE_CENTER, 
-                zoom_start=FRANCE_ZOOM,  # Zoom optimal pour voir toute la France
-                tiles="CartoDB positron", 
+                location=map_center,
+                zoom_start=map_zoom,
+                tiles="CartoDB positron",
                 control_scale=True,
                 zoom_control=True,
                 scrollWheelZoom=True,
                 dragging=True,
-                max_bounds=True  # Limite le déplacement pour garder la France visible
+                max_bounds=False  # Limite le déplacement pour garder la zone voulu visible si possible
             )
         except Exception as e:
             error_html = f"""
@@ -364,11 +429,12 @@ def create_choropleth_html(
             print(f"⚠️ Impossible d'ajouter les tooltips : {e}")
             # Ne pas arrêter pour les tooltips, la carte fonctionne quand même
 
-        # Ne PAS ajuster automatiquement les limites pour garder le zoom France
-        # La carte reste centrée sur la France avec le zoom défini
+        # Ajuster automatiquement les limites uniquement pour les vues France / Métropole
+        # Pour les sélections Outre-Mer, on veut conserver le centre/zoom choisis.
         try:
-            # Optionnel : définir des limites strictes
-            fmap.fit_bounds([[41.0, -5.5], [51.5, 10.0]])  # Cadre France + marges
+            if zone_scope in ("france", "metropole"):
+                # Optionnel : définir des limites strictes pour la France
+                fmap.fit_bounds([[41.0, -5.5], [51.5, 10.0]])  # Cadre France + marges
         except Exception as e:
             print(f"⚠️ Impossible de définir les limites : {e}")
             # La carte s'affiche quand même avec le zoom par défaut
@@ -555,6 +621,37 @@ def layout():
                                     clearable=False,
                                 ),
                             ]),
+                            html.Div([
+                                # Store to hold zone selection
+                                dcc.Store(id="carte-zone-store", data={"scope": "france", "selected": None}),
+
+                                html.Div(
+                                    className="zone-dropdown",
+                                    children=[
+                                        html.Button("Zone ▾", className="zone-btn", id="zone-main-btn"),
+                                        html.Div(
+                                            className="zone-menu",
+                                            children=[
+                                                html.Button("Toute la France", className="zone-item", id="zone-france"),
+                                                html.Button("Métropole", className="zone-item", id="zone-metropole"),
+                                                html.Div([  # Outre-Mer with submenu
+                                                    html.Button("Outre-Mer ▶", className="zone-item outremer", id="zone-outremer"),
+                                                    html.Div(
+                                                        className="submenu",
+                                                        children=[
+                                                            html.Button("Guadeloupe", className="zone-item", id="zone-om-Guadeloupe"),
+                                                            html.Button("Martinique", className="zone-item", id="zone-om-Martinique"),
+                                                            html.Button("Guyane", className="zone-item", id="zone-om-Guyane"),
+                                                            html.Button("La Réunion", className="zone-item", id="zone-om-La_Reunion"),
+                                                            html.Button("Mayotte", className="zone-item", id="zone-om-Mayotte"),
+                                                        ],
+                                                    ),
+                                                ]),
+                                            ],
+                                        ),
+                                    ],
+                                ),
+                            ]),
                         ],
                     ),
                 ],
@@ -583,6 +680,44 @@ def layout():
     )
 
 
+
+@callback(
+    Output("carte-zone-store", "data"),
+    Input("zone-france", "n_clicks"),
+    Input("zone-metropole", "n_clicks"),
+    Input("zone-outremer", "n_clicks"),
+    Input("zone-om-Guadeloupe", "n_clicks"),
+    Input("zone-om-Martinique", "n_clicks"),
+    Input("zone-om-Guyane", "n_clicks"),
+    Input("zone-om-La_Reunion", "n_clicks"),
+    Input("zone-om-Mayotte", "n_clicks"),
+)
+def _zone_menu_click(france, metropole, outremer, gua, mar, guy, rei, may):
+    """Met à jour le store `carte-zone-store` en fonction du bouton cliqué."""
+    ctx = callback_context
+    if not ctx.triggered:
+        raise PreventUpdate
+    trig = ctx.triggered[0]["prop_id"].split(".")[0]
+    if trig == "zone-france":
+        return {"scope": "france", "selected": None}
+    if trig == "zone-metropole":
+        return {"scope": "metropole", "selected": None}
+    if trig == "zone-outremer":
+        return {"scope": "outre-mer", "selected": None}
+    # specific outre-mer
+    if trig == "zone-om-Guadeloupe":
+        return {"scope": "outre-mer-select", "selected": "Guadeloupe"}
+    if trig == "zone-om-Martinique":
+        return {"scope": "outre-mer-select", "selected": "Martinique"}
+    if trig == "zone-om-Guyane":
+        return {"scope": "outre-mer-select", "selected": "Guyane"}
+    if trig == "zone-om-La_Reunion":
+        return {"scope": "outre-mer-select", "selected": "La Réunion"}
+    if trig == "zone-om-Mayotte":
+        return {"scope": "outre-mer-select", "selected": "Mayotte"}
+    return {"scope": "france", "selected": None}
+
+
 @callback(
     Output("carte-choropleth", "srcDoc"),
     Output("carte-stats", "children"),
@@ -590,18 +725,18 @@ def layout():
     Input("carte-annee-slider", "value"),
     Input("carte-pathologie-dropdown", "value"),
     Input("carte-indicateur-dropdown", "value"),
+    Input("carte-zone-store", "data"),
 )
-def update_carte(niveau_geo: str, annee: int, pathologie_value: str, indicateur: str):
+def update_carte(niveau_geo: str, annee: int, pathologie_value: str, indicateur: str, zone_store: dict):
     """Callback pour mettre à jour la carte et les statistiques."""
-    print(f"🔄 CALLBACK APPELÉ : niveau={niveau_geo}, annee={annee}, pathologie={pathologie_value}, indicateur={indicateur}")
-    
+    zone_scope = zone_store.get("scope") if isinstance(zone_store, dict) else "france"
+    outremer_selected = zone_store.get("selected") if isinstance(zone_store, dict) else None
+    print(f"🔄 CALLBACK APPELÉ : niveau={niveau_geo}, annee={annee}, pathologie={pathologie_value}, indicateur={indicateur}, zone_scope={zone_scope}, outremer_selected={outremer_selected}")
+
     pathologie = None if pathologie_value in (None, "ALL") else pathologie_value
-    map_html, df = create_choropleth_html(annee, pathologie, niveau_geo, indicateur)
+    map_html, df = create_choropleth_html(annee, pathologie, niveau_geo, indicateur, zone_scope=zone_scope, outremer_selected=outremer_selected)
     stats_content = _build_stats_content(df, niveau_geo, indicateur)
     
     print(f"✅ CALLBACK TERMINÉ : {len(df)} zones, HTML={len(map_html)} caractères")
-    
-    return map_html, stats_content
-    print(f"✅ CALLBACK TERMINÉ : {len(df)} zones, HTML={len(map_html)} caractères")
-    
+
     return map_html, stats_content
