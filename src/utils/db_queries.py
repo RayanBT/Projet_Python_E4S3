@@ -78,7 +78,7 @@ def get_pathologies_par_departement(
 
 
 def get_evolution_pathologies(
-    debut_annee: int = 2019,
+    debut_annee: int = 2015,
     fin_annee: int = 2023,
     pathologie: Optional[str] = None,
     region: Optional[str] = None,

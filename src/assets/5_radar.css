@@ -124,26 +124,58 @@
 
 .page-container .year-slider .rc-slider-rail {
     background-color: #e2e8f0;
-    height: 4px;
+    height: 6px;
 }
 
 .page-container .year-slider .rc-slider-track {
-    background-color: #3498db;
-    height: 4px;
+    background-color: #EC4899;
+    height: 6px;
 }
 
 .page-container .year-slider .rc-slider-handle {
-    border: solid 2px #3498db;
+    border: solid 3px #EC4899;
     background-color: white;
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     margin-top: -6px;
     opacity: 1;
+    box-shadow: 0 2px 8px rgba(236, 72, 153, 0.3);
 }
 
 .page-container .year-slider .rc-slider-handle:hover,
 .page-container .year-slider .rc-slider-handle:active {
-    border-color: #2980b9;
+    border-color: #BE185D;
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.5);
+}
+
+/* Slider marks - espacement amélioré */
+.page-container .rc-slider-mark {
+    font-size: 0.9rem;
+}
+
+.page-container .rc-slider-mark-text {
+    white-space: nowrap;
+    color: #2c3e50;
+    font-weight: 500;
+    margin-top: 8px;
+}
+
+.page-container .rc-slider-mark-text-active {
+    color: #EC4899;
+    font-weight: 600;
+}
+
+/* Tooltip du slider */
+.page-container .rc-slider-tooltip {
+    z-index: 9999;
+}
+
+.page-container .rc-slider-tooltip-inner {
+    background-color: #EC4899;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
 }
 
 /* Graph container */

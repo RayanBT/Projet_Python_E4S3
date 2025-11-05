@@ -1,12 +1,12 @@
 """Page dédiée à l'évolution temporelle des pathologies."""
 
-from dash import html, dcc, Input, Output, callback
+from dash import html, dcc, Input, Output, callback, clientside_callback
 import plotly.express as px
 import plotly.graph_objects as go
 from src.utils.db_queries import get_evolution_pathologies, get_liste_pathologies
 from src.components.icons import icon_chart_bar, icon_pin
 
-def create_evolution_figure(debut_annee=2019, fin_annee=2023, pathologies=None, region=None):
+def create_evolution_figure(debut_annee=2015, fin_annee=2023, pathologies=None, region=None):
     """Crée le graphique d'évolution temporelle des pathologies.
     
     Args:
@@ -114,13 +114,20 @@ def layout():
                     html.Label("Période d'analyse", className="form-label"),
                     html.Div(className="filter-content", children=[
                         dcc.RangeSlider(
-                            id='evolution-periode-slider',
-                            min=2019,
+                            id='periode-slider',
+                            min=2015,
                             max=2023,
-                            value=[2019, 2023],
-                            marks={str(year): str(year) for year in range(2019, 2024)},
-                            step=None,
-                            className="period-slider"
+                            value=[2015, 2023],
+                            marks={
+                                2015: '2015',
+                                2017: '2017',
+                                2019: '2019',
+                                2021: '2021',
+                                2023: '2023'
+                            },
+                            step=1,
+                            className="period-slider",
+                            tooltip={"placement": "bottom", "always_visible": True}
                         ),
                         html.Div(
                             id='periode-display',
@@ -138,9 +145,14 @@ def layout():
                             options=[{'label': p, 'value': p} for p in pathologies],
                             value=[],  # Aucune sélection par défaut = toutes les pathologies
                             multi=True,  # Active la sélection multiple
-                            placeholder="Sélectionnez des pathologies (max. 5)",
+                            placeholder="Sélectionnez jusqu'à 5 pathologies (toutes si vide)",
                             clearable=True,
                             className="pathologies-dropdown"
+                        ),
+                        html.Div(
+                            id='pathologie-counter',
+                            className="pathologie-counter",
+                            children="0/5 sélectionnées"
                         ),
                         html.Div(
                             id='pathologie-warning',
@@ -203,12 +215,64 @@ def layout():
         
     ])
 
+# ============================================================
+# CALLBACK CLIENTSIDE (JavaScript) - Limitation instantanée
+# ============================================================
+clientside_callback(
+    """
+    function(selectedValues, allOptions) {
+        // Si pas de sélection ou moins de 5, toutes les options disponibles
+        if (!selectedValues || selectedValues.length < 5) {
+            return [
+                allOptions.map(opt => ({...opt, disabled: false})),
+                selectedValues ? selectedValues.length + '/5 sélectionnées' : '0/5 sélectionnées',
+                ''
+            ];
+        }
+        
+        // Si exactement 5, désactiver les autres
+        if (selectedValues.length === 5) {
+            const updatedOptions = allOptions.map(opt => ({
+                ...opt,
+                disabled: !selectedValues.includes(opt.value)
+            }));
+            return [
+                updatedOptions,
+                '5/5 sélectionnées (MAX)',
+                ''
+            ];
+        }
+        
+        // Si plus de 5 (copier-coller), garder les 5 premières
+        if (selectedValues.length > 5) {
+            const firstFive = selectedValues.slice(0, 5);
+            const updatedOptions = allOptions.map(opt => ({
+                ...opt,
+                disabled: !firstFive.includes(opt.value)
+            }));
+            return [
+                updatedOptions,
+                '5/5 sélectionnées (MAX)',
+                '⚠️ Maximum 5 pathologies ! Les 5 premières ont été conservées.'
+            ];
+        }
+    }
+    """,
+    [Output('evolution-pathologie-dropdown', 'options', allow_duplicate=True),
+     Output('pathologie-counter', 'children', allow_duplicate=True),
+     Output('pathologie-warning', 'children', allow_duplicate=True)],
+    [Input('evolution-pathologie-dropdown', 'value'),
+     Input('evolution-pathologie-dropdown', 'options')],
+    prevent_initial_call=True
+)
+
+# ============================================================
+# CALLBACK SERVEUR - Mise à jour du graphique
+# ============================================================
 @callback(
     [Output('evolution-graph', 'figure'),
-     Output('pathologie-warning', 'children'),
-     Output('evolution-pathologie-dropdown', 'value'),
      Output('periode-display', 'children')],
-    [Input('evolution-periode-slider', 'value'),
+    [Input('periode-slider', 'value'),
      Input('evolution-pathologie-dropdown', 'value')]
 )
 def update_evolution(periode, pathologies):
@@ -219,28 +283,26 @@ def update_evolution(periode, pathologies):
         pathologies (list): Liste des pathologies sélectionnées
         
     Returns:
-        tuple: (Figure mise à jour, Message d'avertissement, Valeurs de sélection validées, Texte période)
+        tuple: (Figure, Texte période)
     """
     debut_annee, fin_annee = periode
     
-    warning = ""
     # Préparer le texte d'affichage de la période
     periode_text = f"De {debut_annee} à {fin_annee}"
     
-    # Si la liste est vide, afficher toutes les pathologies
+    # Limiter à 5 pathologies si dépassement (sécurité serveur)
+    if pathologies and len(pathologies) > 5:
+        pathologies = pathologies[:5]
+    
+    # Si la liste est vide ou None, afficher toutes les pathologies
     if not pathologies:
         figure = create_evolution_figure(debut_annee, fin_annee, None)
-        return figure, warning, [], periode_text
+        return figure, periode_text
     
-    # Si plus de 5 pathologies sont sélectionnées, garder les 5 premières
-    if len(pathologies) > 5:
-        pathologies = pathologies[:5]
-        warning = "Maximum 5 pathologies peuvent être sélectionnées"
-    
-    # Créer une figure avec les pathologies sélectionnées
+    # Créer la figure avec les pathologies sélectionnées
     figure = create_evolution_figure(debut_annee, fin_annee, pathologies)
     
-    return figure, warning, pathologies, periode_text
+    return figure, periode_text
 
 @callback(
     Output('evolution-stats', 'children'),

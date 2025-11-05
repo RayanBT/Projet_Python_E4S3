@@ -589,12 +589,18 @@ def layout():
                                 html.Label("Année", className="form-label"),
                                 dcc.Slider(
                                     id="carte-annee-slider",
-                                    min=2019,
+                                    min=2015,
                                     max=2023,
                                     value=2023,
-                                    marks={str(year): str(year) for year in range(2019, 2024)},
-                                    step=None,
-                                    tooltip={"placement": "bottom"},
+                                    marks={
+                                        2015: '2015',
+                                        2017: '2017', 
+                                        2019: '2019',
+                                        2021: '2021',
+                                        2023: '2023'
+                                    },
+                                    step=1,
+                                    tooltip={"placement": "bottom", "always_visible": True},
                                 ),
                             ]),
                             

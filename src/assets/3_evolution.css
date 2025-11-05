@@ -68,66 +68,267 @@
 .page-container .period-slider .rc-slider-mark-text {
     color: #2c3e50;
     font-weight: 500;
-    font-size: 0.9rem;  /* Ajouté pour réduire la taille du texte */
+    font-size: 0.9rem;
+    white-space: nowrap;
+    margin-top: 8px;
+}
+
+.page-container .period-slider .rc-slider-mark-text-active {
+    color: #3498db;
+    font-weight: 600;
+}
+
+/* Tooltip du slider */
+.page-container .period-slider .rc-slider-tooltip {
+    z-index: 9999;
+}
+
+.page-container .period-slider .rc-slider-tooltip-inner {
+    background-color: #3498db;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
 }
 
 /* Style du rail du slider */
 .page-container .period-slider .rc-slider-rail {
     background-color: #e2e8f0;
-    height: 3px;  /* Réduit de 4px à 3px */
+    height: 6px;
 }
 
 /* Style de la trace du slider */
 .page-container .period-slider .rc-slider-track {
     background-color: #3498db;
-    height: 3px;  /* Réduit de 4px à 3px */
+    height: 6px;
 }
 
 /* Style des handles du slider */
 .page-container .period-slider .rc-slider-handle {
-    border: solid 2px #3498db;
+    border: solid 3px #3498db;
     background-color: white;
-    width: 14px;  /* Réduit de 16px à 14px */
-    height: 14px;  /* Réduit de 16px à 14px */
+    width: 18px;
+    height: 18px;
     margin-top: -6px;
     opacity: 1;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
 }
 
 .page-container .period-slider .rc-slider-handle:hover {
     border-color: #2980b9;
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.5);
 }
 
 .page-container .period-slider .rc-slider-handle:active {
     border-color: #2980b9;
 }
 
-/* Style du dropdown de pathologies */
+/* Style du dropdown de pathologies - AMÉLIORÉ */
 .page-container .pathologies-dropdown {
     max-width: 100%;
 }
 
-/* Style du menu déroulant du dropdown */
-.page-container .pathologies-dropdown .Select-menu-outer {
-    max-height: 200px;
-}
-
-/* Style du conteneur de sélection */
+/* Conteneur de contrôle du dropdown - Style moderne */
 .page-container .pathologies-dropdown .Select-control {
-    height: 34px;
-    min-height: 34px;
+    min-height: 48px !important;
+    border-radius: 8px !important;
+    border: 2px solid #e4e7eb !important;
+    background-color: white !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
 }
 
-/* Style du texte dans le dropdown */
-.page-container .pathologies-dropdown .Select-placeholder,
+.page-container .pathologies-dropdown .Select-control:hover {
+    border-color: #3498db !important;
+    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.15) !important;
+}
+
+.page-container .pathologies-dropdown .Select-control.is-focused,
+.page-container .pathologies-dropdown .Select-control.is-open {
+    border-color: #3498db !important;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1) !important;
+}
+
+/* Placeholder - Texte d'aide */
+.page-container .pathologies-dropdown .Select-placeholder {
+    color: #95a5a6 !important;
+    font-size: 0.95rem !important;
+    padding: 8px 12px !important;
+    line-height: 1.5 !important;
+}
+
+/* Valeurs sélectionnées */
 .page-container .pathologies-dropdown .Select-value {
-    line-height: 32px;
-    font-size: 0.9rem;
+    background-color: #3498db !important;
+    border: none !important;
+    border-radius: 6px !important;
+    padding: 6px 12px !important;
+    margin: 4px 6px 4px 0 !important;
+    color: white !important;
+    font-weight: 500 !important;
+    font-size: 0.9rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    transition: all 0.2s ease !important;
 }
 
-/* Style des options dans le menu */
-.page-container .pathologies-dropdown .VirtualizedSelectOption {
-    font-size: 0.9rem;
-    padding: 6px 10px;
+.page-container .pathologies-dropdown .Select-value:hover {
+    background-color: #2980b9 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);
+}
+
+/* Label des valeurs sélectionnées */
+.page-container .pathologies-dropdown .Select-value-label {
+    color: white !important;
+    padding: 0 8px 0 0 !important;
+    line-height: 1.4 !important;
+}
+
+/* Icône de suppression */
+.page-container .pathologies-dropdown .Select-value-icon {
+    border-right: 1px solid rgba(255, 255, 255, 0.3) !important;
+    padding: 0 8px 0 0 !important;
+    margin-right: 8px !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+    transition: color 0.2s ease !important;
+}
+
+.page-container .pathologies-dropdown .Select-value-icon:hover {
+    color: white !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Conteneur du menu déroulant */
+.page-container .pathologies-dropdown .Select-menu-outer {
+    max-height: 320px !important;
+    margin-top: 8px !important;
+    border-radius: 8px !important;
+    border: 2px solid #e4e7eb !important;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15) !important;
+    z-index: 9999 !important;
+}
+
+.page-container .pathologies-dropdown .Select-menu {
+    max-height: 316px !important;
+    border-radius: 8px !important;
+}
+
+/* Options du menu - Style moderne */
+.page-container .pathologies-dropdown .Select-option {
+    padding: 14px 16px !important;
+    font-size: 0.95rem !important;
+    color: #2c3e50 !important;
+    background-color: white !important;
+    border-bottom: 1px solid #f1f3f5 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    line-height: 1.5 !important;
+    word-wrap: break-word !important;
+}
+
+.page-container .pathologies-dropdown .Select-option:last-child {
+    border-bottom: none !important;
+}
+
+.page-container .pathologies-dropdown .Select-option:hover,
+.page-container .pathologies-dropdown .Select-option.is-focused {
+    background-color: #e3f2fd !important;
+    color: #1976d2 !important;
+    padding-left: 20px !important;
+}
+
+.page-container .pathologies-dropdown .Select-option.is-selected {
+    background-color: #3498db !important;
+    color: white !important;
+    font-weight: 600 !important;
+}
+
+.page-container .pathologies-dropdown .Select-option.is-selected:hover {
+    background-color: #2980b9 !important;
+}
+
+/* Options désactivées (limite atteinte) */
+.page-container .pathologies-dropdown .Select-option.is-disabled {
+    background-color: #f8f9fa !important;
+    color: #95a5a6 !important;
+    cursor: not-allowed !important;
+    opacity: 0.6 !important;
+    font-style: italic !important;
+}
+
+.page-container .pathologies-dropdown .Select-option.is-disabled:hover {
+    background-color: #f8f9fa !important;
+    color: #95a5a6 !important;
+    padding-left: 16px !important;
+}
+
+/* Flèche du dropdown */
+.page-container .pathologies-dropdown .Select-arrow-zone {
+    padding: 0 12px !important;
+    transition: transform 0.3s ease !important;
+}
+
+.page-container .pathologies-dropdown .Select-control.is-open .Select-arrow-zone {
+    transform: rotate(180deg);
+}
+
+.page-container .pathologies-dropdown .Select-arrow {
+    border-color: #3498db transparent transparent !important;
+    border-width: 6px 5px 3px !important;
+}
+
+/* Input de recherche dans le dropdown */
+.page-container .pathologies-dropdown .Select-input {
+    padding: 8px 12px !important;
+}
+
+.page-container .pathologies-dropdown .Select-input > input {
+    font-size: 0.95rem !important;
+    color: #2c3e50 !important;
+}
+
+/* Message "Pas d'options" */
+.page-container .pathologies-dropdown .Select-noresults {
+    padding: 16px !important;
+    text-align: center !important;
+    color: #7f8c8d !important;
+    font-style: italic !important;
+}
+
+/* Scrollbar personnalisée pour le menu */
+.page-container .pathologies-dropdown .Select-menu-outer::-webkit-scrollbar {
+    width: 8px;
+}
+
+.page-container .pathologies-dropdown .Select-menu-outer::-webkit-scrollbar-track {
+    background: #f1f3f5;
+    border-radius: 4px;
+}
+
+.page-container .pathologies-dropdown .Select-menu-outer::-webkit-scrollbar-thumb {
+    background: #3498db;
+    border-radius: 4px;
+}
+
+.page-container .pathologies-dropdown .Select-menu-outer::-webkit-scrollbar-thumb:hover {
+    background: #2980b9;
+}
+
+/* Animation d'ouverture du menu */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.page-container .pathologies-dropdown .Select-menu-outer {
+    animation: slideDown 0.2s ease;
 }
 
 /* Affichage de la période */
@@ -161,18 +362,95 @@
 
 /* Pathologies filter specific */
 .page-container .pathologies-filter {
-    flex: 2 1 calc(66.66% - 24px) !important;  /* Prend plus d'espace */
+    flex: 2 1 calc(66.66% - 24px) !important;
 }
 
-.page-container .pathologies-dropdown {
-    width: 100%;
+.page-container .pathologies-filter .form-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 12px;
 }
 
+.page-container .pathologies-filter .form-label::before {
+    content: "🏥";
+    font-size: 1.2rem;
+}
+
+/* Compteur de sélections */
+.page-container .pathologie-counter {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    margin-top: 6px;
+    padding: 6px 10px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.page-container .pathologie-counter:has-text("5/5") {
+    color: #e67e22;
+    background-color: #fef5e7;
+    border: 1px solid #f39c12;
+}
+
+/* Avertissement amélioré */
 .page-container .filter-warning {
-    color: #e74c3c;
-    font-size: 0.8rem;
-    font-style: italic;
-    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    margin-top: 10px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    animation: fadeIn 0.3s ease;
+    /* Masquer si vide */
+    min-height: 0;
+}
+
+.page-container .filter-warning:empty {
+    display: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Supprimer l'émoji automatique - sera ajouté via Python */
+/* .page-container .filter-warning::before {
+    content: "⚠️";
+    font-size: 1.1rem;
+    flex-shrink: 0;
+} */
+
+/* Avertissement rouge (trop de sélections) */
+.page-container .filter-warning {
+    color: #c0392b;
+    background-color: #fdecea;
+    border: 1px solid #f5c6cb;
+}
+
+/* Style alternatif pour info (si besoin futur) */
+.page-container .filter-warning.warning-info {
+    color: #1976d2 !important;
+    background-color: #e3f2fd;
+    border: 1px solid #bbdefb;
+}
+
+/* Animation d'apparition */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Form labels */
@@ -367,6 +645,32 @@
         width: 100%;
     }
     
+    /* Dropdown pathologies sur mobile */
+    .page-container .pathologies-dropdown .Select-control {
+        min-height: 44px !important;
+    }
+    
+    .page-container .pathologies-dropdown .Select-value {
+        margin: 3px 4px 3px 0 !important;
+        padding: 5px 10px !important;
+        font-size: 0.85rem !important;
+    }
+    
+    .page-container .pathologies-dropdown .Select-menu-outer {
+        max-height: 250px !important;
+    }
+    
+    .page-container .pathologies-dropdown .Select-option {
+        padding: 12px 14px !important;
+        font-size: 0.9rem !important;
+    }
+    
+    /* Avertissement sur mobile */
+    .page-container .filter-warning {
+        font-size: 0.85rem !important;
+        padding: 8px 12px !important;
+    }
+    
     .page-container .button-group {
         flex-direction: column;
         align-items: stretch;
@@ -376,5 +680,22 @@
     .page-container .btn-secondary {
         width: 100%;
         margin: 5px 0;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Dropdown encore plus compact sur très petits écrans */
+    .page-container .pathologies-dropdown .Select-value {
+        font-size: 0.8rem !important;
+        padding: 4px 8px !important;
+    }
+    
+    .page-container .pathologies-filter .form-label {
+        font-size: 0.95rem !important;
+    }
+    
+    .page-container .filter-warning {
+        font-size: 0.8rem !important;
+        padding: 8px 10px !important;
     }
 }

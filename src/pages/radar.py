@@ -125,11 +125,18 @@ def layout():
                                     html.Label("Année"),
                                     dcc.Slider(
                                         id="radar-annee-slider",
-                                        min=2019,
+                                        min=2015,
                                         max=2023,
                                         value=2023,
-                                        marks={str(y): str(y) for y in range(2019, 2024)},
-                                        step=None,
+                                        marks={
+                                            2015: '2015',
+                                            2017: '2017',
+                                            2019: '2019',
+                                            2021: '2021',
+                                            2023: '2023'
+                                        },
+                                        step=1,
+                                        tooltip={"placement": "bottom", "always_visible": True},
                                     ),
                                     html.Div(id="radar-annee-display"),
                                 ],

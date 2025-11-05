@@ -16,7 +16,6 @@ from src.state.init_progress import InitializationState
 # Import des modules pour enregistrer les callbacks (sans exécuter les layouts)
 import src.pages.carte as carte_module
 import src.pages.evolution as evolution_module
-import src.pages.dashboard as dashboard_module
 import src.pages.accueil as accueil_module
 import src.pages.histogramme as histogramme_module
 import src.pages.radar as radar_module
@@ -126,8 +125,6 @@ def create_app(init_state: InitializationState) -> Dash:
             return histogramme_module.layout()
         if pathname == "/radar":
             return radar_module.layout()
-        if pathname == "/dashboard":
-            return dashboard_module.layout()
         if pathname == "/about":
             return html.H2("Page a propos")
         
