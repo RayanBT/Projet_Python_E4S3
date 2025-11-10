@@ -166,6 +166,77 @@ def get_liste_pathologies() -> List[str]:
     return pd.read_sql_query(query, engine)["patho_niv1"].tolist()
 
 
+def get_repartition_patho_niv2(annee: int = 2023, pathologie: Optional[str] = None) -> pd.DataFrame:
+    """Retourne la répartition des sous-pathologies (patho_niv2) pour une patho_niv1 donnée et une année.
+
+    Si pathologie est None, retourne une table vide.
+    """
+    if not pathologie:
+        return pd.DataFrame(columns=["patho_niv2", "total_cas"])
+
+    engine = get_db_connection()
+    query = text(
+        """
+        SELECT
+            patho_niv2,
+            SUM(Ntop) AS total_cas
+        FROM effectifs
+        WHERE annee = :annee
+          AND (:patho IS NULL OR patho_niv1 = :patho)
+        GROUP BY patho_niv2
+        ORDER BY total_cas DESC
+        """
+    )
+    return pd.read_sql_query(
+        query,
+        engine,
+        params={"annee": annee, "patho": pathologie},
+    )
+
+
+def get_pathologies_with_niv2() -> List[str]:
+    """Retourne la liste des patho_niv1 qui ont au moins une patho_niv2 renseignée."""
+    engine = get_db_connection()
+    query = text(
+        """
+        SELECT DISTINCT patho_niv1
+        FROM effectifs
+        WHERE patho_niv2 IS NOT NULL
+          AND TRIM(patho_niv2) != ''
+        ORDER BY patho_niv1
+        """
+    )
+    return pd.read_sql_query(query, engine)["patho_niv1"].tolist()
+
+
+def get_repartition_patho_niv3(annee: int = 2023, pathologie: Optional[str] = None) -> pd.DataFrame:
+    """Retourne la répartition des sous-pathologies (patho_niv3) pour une patho_niv1 donnée et une année.
+
+    Si pathologie est None, retourne une table vide.
+    """
+    if not pathologie:
+        return pd.DataFrame(columns=["patho_niv3", "total_cas"])
+
+    engine = get_db_connection()
+    query = text(
+        """
+        SELECT
+            patho_niv3,
+            SUM(Ntop) AS total_cas
+        FROM effectifs
+        WHERE annee = :annee
+          AND (:patho IS NULL OR patho_niv1 = :patho)
+        GROUP BY patho_niv3
+        ORDER BY total_cas DESC
+        """
+    )
+    return pd.read_sql_query(
+        query,
+        engine,
+        params={"annee": annee, "patho": pathologie},
+    )
+
+
 def get_distribution_age(
     annee: int = 2023,
     pathologie: Optional[str] = None,

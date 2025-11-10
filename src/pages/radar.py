@@ -7,19 +7,51 @@ from src.utils.db_queries import (
     get_liste_pathologies,
     get_liste_regions,
     get_pathologies_par_region,
+    get_repartition_patho_niv2,
+    get_repartition_patho_niv3,
+    get_pathologies_with_niv2,
 )
 from src.components.icons import icon_chart_spider, icon_pin
+from typing import Optional
+
+# Pathologies autorisées pour les dropdowns
+ALLOWED_PATHOLOGIES = [
+    "Traitements risques vasculaire",
+    "Traitements psychotropes",
+    "Maladies psychatriques",
+    "Maladies neurologiques",
+    "Insuffisance rénale",
+    "Maladies inflammatoires/VIH",
+    "Maladies cardiovasculaires",
+    "Cancers"
+]
+
+# Pathologies pour lesquelles on ne montre pas le radar niv3
+NO_NIV3_PATHOLOGIES = [
+    "Traitements risques vasculaire",
+    "Traitements psychotropes",
+    "Maladies psychatriques",
+    "Maladies neurologiques",
+    "Insuffisance rénale"
+]
 
 
 def create_radar_figure(dimension="pathologies", annee=2023, selection=None, region=None):
     """Crée le graphique radar pour comparer les données selon la dimension choisie."""
     
     if dimension == "pathologies":
-        df = get_evolution_pathologies(annee, annee, None, region)
-        df = df.sort_values("total_cas", ascending=False)
-        categories = df["patho_niv1"].tolist()
-        values = df["total_cas"].tolist()
-        title = f"Répartition des pathologies en {annee}"
+        if isinstance(selection, str) and selection:
+            df2 = get_repartition_patho_niv2(annee, selection)
+            df2 = df2.sort_values("total_cas", ascending=False)
+            categories = df2["patho_niv2"].fillna("Inconnue").tolist()
+            values = df2["total_cas"].tolist()
+            title = f"Répartition des sous-pathologies de '{selection}' en {annee}"
+        else:
+            df = get_evolution_pathologies(annee, annee, None, region)
+            df = df[df["patho_niv1"].isin(ALLOWED_PATHOLOGIES)]
+            categories = df["patho_niv1"].tolist()
+            values = df["total_cas"].tolist()
+            title = f"Répartition des pathologies en {annee}"
 
     elif dimension == "regions":
         df = get_pathologies_par_region(annee)
@@ -28,8 +60,6 @@ def create_radar_figure(dimension="pathologies", annee=2023, selection=None, reg
             df = df[df["region"].isin(selection)]
 
         region_names = {
-            "11": "Île-de-France",
-            "24": "Centre-Val de Loire",
             "27": "Bourgogne-Franche-Comté",
             "28": "Normandie",
             "32": "Hauts-de-France",
@@ -65,7 +95,13 @@ def create_radar_figure(dimension="pathologies", annee=2023, selection=None, reg
         return fig
 
     fig = go.Figure()
-    fig.add_trace(go.Scatterpolar(r=values, theta=categories, fill="toself", name=str(annee)))
+    fig.add_trace(go.Scatterpolar(
+        r=values,
+        theta=categories,
+        fill="toself",
+        name=str(annee),
+        marker=dict(color='rgba(31,119,180,0.8)')
+    ))
 
     fig.update_layout(
         polar=dict(
@@ -74,6 +110,50 @@ def create_radar_figure(dimension="pathologies", annee=2023, selection=None, reg
         ),
         showlegend=False,
         title=dict(text=title, x=0.5),
+        height=700,
+        margin=dict(t=80, b=60, l=80, r=80),
+    )
+    return fig
+
+
+def create_radar_figure_niv3(annee: int = 2023, selection: Optional[str] = None):
+    """Crée un second graphique radar montrant la répartition des patho_niv3."""
+    if not selection or not isinstance(selection, str):
+        return go.Figure()
+
+    df3 = get_repartition_patho_niv3(annee, selection)
+    if df3.empty:
+        fig = go.Figure()
+        fig.add_annotation(
+            text="Aucune sous-sous-pathologie (patho_niv3) disponible pour cette sélection",
+            xref="paper",
+            yref="paper",
+            x=0.5,
+            y=0.5,
+            showarrow=False,
+            font=dict(size=14),
+        )
+        return fig
+
+    df3 = df3.sort_values("total_cas", ascending=False)
+    categories = df3["patho_niv3"].fillna("Inconnue").tolist()
+    values = df3["total_cas"].tolist()
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatterpolar(
+        r=values,
+        theta=categories,
+        fill="toself",
+        name="patho_niv3",
+        marker=dict(color='rgba(220,20,60,0.8)')
+    ))
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(visible=True, gridcolor="rgba(0, 0, 0, 0.1)"),
+            angularaxis=dict(gridcolor="rgba(0, 0, 0, 0.1)", direction="clockwise"),
+        ),
+        showlegend=True,
+        title=dict(text=f"Répartition des patho_niv3 de '{selection}' en {annee}", x=0.5),
         height=700,
         margin=dict(t=80, b=60, l=80, r=80),
     )
@@ -128,17 +208,24 @@ def layout():
                                         min=2015,
                                         max=2023,
                                         value=2023,
-                                        marks={
-                                            2015: '2015',
-                                            2017: '2017',
-                                            2019: '2019',
-                                            2021: '2021',
-                                            2023: '2023'
-                                        },
+                                        marks={2015: '2015', 2017: '2017', 2019: '2019', 2021: '2021', 2023: '2023'},
                                         step=1,
                                         tooltip={"placement": "bottom", "always_visible": True},
                                     ),
                                     html.Div(id="radar-annee-display"),
+                                ],
+                            ),
+                            html.Div(
+                                className="filter-section",
+                                children=[
+                                    html.Label("Voir sous-pathologies (optionnel)"),
+                                    dcc.Dropdown(
+                                        id="radar-patho-niv1-dropdown",
+                                        options=[{"label": p, "value": p} for p in get_pathologies_with_niv2() if p in ALLOWED_PATHOLOGIES],
+                                        value=None,
+                                        placeholder="Sélectionnez une pathologie (ayant des sous-pathologies)",
+                                        clearable=True,
+                                    ),
                                 ],
                             ),
                             dcc.Dropdown(
@@ -154,33 +241,36 @@ def layout():
             html.Div(
                 className="card mt-2",
                 children=[
-                    dcc.Graph(
-                        id="radar-graph",
-                        config={
-                            "displayModeBar": True,
-                            "displaylogo": False,
-                            "modeBarButtonsToRemove": ["pan2d", "lasso2d", "select2d"],
-                        },
+                    html.Div(
+                        className="radar-row",
+                        children=[
+                            dcc.Graph(
+                                id="radar-graph",
+                                config={"displayModeBar": True, "displaylogo": False, "modeBarButtonsToRemove": ["pan2d", "lasso2d", "select2d"]},
+                                style={"width": "100%", "display": "block"},
+                            ),
+                            dcc.Graph(
+                                id="radar-graph-niv3",
+                                config={"displayModeBar": True, "displaylogo": False, "modeBarButtonsToRemove": ["pan2d", "lasso2d", "select2d"]},
+                                style={"display": "none"},
+                            ),
+                        ],
                     )
                 ],
             ),
-            html.Div(className="card mt-2",children=[
+            html.Div(className="card mt-2", children=[
                 html.H3([icon_pin("icon-inline"), "Comment interpréter ce graphique ?"], className="subsection-title"),
                 html.Ul(className="info-list", children=[
                     html.Li("Chaque axe représente un élément analysé"),
                     html.Li("La distance du centre correspond à la valeur associée"),
                     html.Li("Plus la surface est grande, plus les valeurs sont élevées"),
-                    ]),
-                ],
-            ),
-            # Boutons de navigation
+                ]),
+            ]),
             html.Div(className="text-center mt-3", children=[
-                dcc.Link(
-                    html.Button('← Retour à l\'accueil', className="btn btn-secondary"),
-                    href='/',
-            ),
-        ])
-    ])
+                dcc.Link(html.Button('← Retour à l\'accueil', className="btn btn-secondary"), href='/'),
+            ])
+        ]
+    )
 
 
 # === Callbacks ===
@@ -194,10 +284,10 @@ def layout():
 def update_elements_options(dimension):
     """Met à jour le contenu du dropdown selon la dimension."""
     if dimension == "pathologies":
-        pathologies = get_liste_pathologies()
+        pathologies = [p for p in get_liste_pathologies() if p in ALLOWED_PATHOLOGIES]
         options = [{"label": p, "value": p} for p in pathologies]
         return options, pathologies
-    else:  # régions
+    else:
         regions = get_liste_regions()
         regions = [r for r in regions if len(r) == 2]
         options = [{"label": r, "value": r} for r in regions]
@@ -211,18 +301,31 @@ def update_elements_options(dimension):
         Output("radar-warning", "children"),
         Output("radar-annee-display", "children"),
         Output("radar-annee-slider", "style"),
+        Output("radar-graph-niv3", "figure"),
+        Output("radar-graph-niv3", "style"),
     ],
     [
         Input("radar-dimension-dropdown", "value"),
         Input("radar-annee-slider", "value"),
         Input("radar-elements-dropdown", "value"),
+        Input("radar-patho-niv1-dropdown", "value"),
     ],
 )
-def update_radar(dimension, annee, selection):
+def update_radar(dimension, annee, selection, patho_niv1_selected):
     """Met à jour le graphique radar."""
     warning = ""
     annee_text = f"Année sélectionnée : {annee}"
     slider_style = {}
 
-    figure = create_radar_figure(dimension, annee, selection)
-    return figure, warning, annee_text, slider_style
+    sel = patho_niv1_selected if patho_niv1_selected else selection
+    figure = create_radar_figure(dimension, annee, sel)
+
+    # Affichage du radar niv3 en dessous si autorisé
+    if isinstance(sel, str) and sel and sel not in NO_NIV3_PATHOLOGIES:
+        fig_niv3 = create_radar_figure_niv3(annee, sel)
+        style_niv3 = {"width": "100%", "display": "block", "marginTop": "20px"}
+    else:
+        fig_niv3 = go.Figure()
+        style_niv3 = {"display": "none"}
+
+    return figure, warning, annee_text, slider_style, fig_niv3, style_niv3
