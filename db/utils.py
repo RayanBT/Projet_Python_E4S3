@@ -1,7 +1,17 @@
+"""Utilitaires pour la creation et l'alimentation de la base SQLite."""
+
 import csv
 import sqlite3
 from pathlib import Path
 from typing import Callable, Final, Optional
+
+# Constantes
+CHUNK_SIZE: Final[int] = 20_000
+DEFAULT_DELIMITER = ";"
+FALLBACK_DELIMITER = ","
+
+# Type aliases
+Reporter = Callable[[str], None]
 
 # Schema dans l'ordre attendu
 EFFECTIFS_COLUMNS: list[tuple[str, str]] = [
@@ -24,9 +34,6 @@ EFFECTIFS_COLUMNS: list[tuple[str, str]] = [
     ("tri", "REAL"),
 ]
 
-CHUNK: Final[int] = 20_000
-Reporter = Callable[[str], None]
-
 
 def bootstrap_db_from_csv(
     db_path: Path,
@@ -39,28 +46,29 @@ def bootstrap_db_from_csv(
     """Cree la table SQLite et importe le CSV si necessaire.
 
     Args:
-        db_path (Path): Chemin vers le fichier SQLite a alimenter.
-        csv_path (Path): Chemin du fichier CSV source.
-        table_name (str): Nom de la table cible dans SQLite.
-        force_reimport (bool): True pour reinjecter meme si des donnees existent.
-        report (Reporter | None): Fonction de log pour suivre la progression.
-
-    Returns:
-        None
+        db_path: Chemin vers le fichier SQLite a alimenter.
+        csv_path: Chemin du fichier CSV source.
+        table_name: Nom de la table cible dans SQLite.
+        force_reimport: True pour reinjecter meme si des donnees existent.
+        report: Fonction de log pour suivre la progression.
     """
     report_fn = report or print
     db_path.parent.mkdir(parents=True, exist_ok=True)
+
     with sqlite3.connect(db_path) as conn:
-        cols_sql = ", ".join(f'"{n}" {t}' for n, t in EFFECTIFS_COLUMNS)
+        # Creer la table si elle n'existe pas
+        cols_sql = ", ".join(f'"{name}" {col_type}' for name, col_type in EFFECTIFS_COLUMNS)
         conn.execute(f'CREATE TABLE IF NOT EXISTS "{table_name}" ({cols_sql});')
         conn.commit()
 
-        existing = conn.execute(
-            f'SELECT COUNT(*) FROM "{table_name}"'
-        ).fetchone()[0]
+        # Verifier si des donnees existent deja
+        cursor = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"')
+        existing = cursor.fetchone()[0]
+
         if existing > 0 and not force_reimport:
             report_fn(f"[OK] Donnees deja presentes dans {table_name} - import ignore.")
             return
+
         if existing > 0 and force_reimport:
             conn.execute(f'DELETE FROM "{table_name}";')
             conn.commit()
@@ -74,42 +82,47 @@ def import_csv_to_sqlite(csv_path: Path, db_path: Path, table_name: str) -> int:
     """Insere le contenu d'un CSV dans une table SQLite.
 
     Args:
-        csv_path (Path): Chemin du fichier CSV a parcourir.
-        db_path (Path): Chemin du fichier SQLite.
-        table_name (str): Nom de la table cible.
+        csv_path: Chemin du fichier CSV a parcourir.
+        db_path: Chemin du fichier SQLite.
+        table_name: Nom de la table cible.
 
     Returns:
-        int: Nombre total de lignes inserees dans la table.
+        Nombre total de lignes inserees dans la table.
     """
     db_path.parent.mkdir(parents=True, exist_ok=True)
+
     with sqlite3.connect(db_path) as conn:
-        # 1) Ensure the table exists
-        cols_sql = ", ".join(f'"{n}" {t}' for n, t in EFFECTIFS_COLUMNS)
+        # 1) S'assurer que la table existe
+        cols_sql = ", ".join(f'"{name}" {col_type}' for name, col_type in EFFECTIFS_COLUMNS)
         conn.execute(f'CREATE TABLE IF NOT EXISTS "{table_name}" ({cols_sql});')
         conn.commit()
 
-        # 2) Prepare the INSERT statement (SQLite handles the auto id)
-        cols = [n for n, _ in EFFECTIFS_COLUMNS if n != "id"]
+        # 2) Preparer la requete INSERT (SQLite gere l'auto-increment de l'id)
+        cols = [name for name, _ in EFFECTIFS_COLUMNS if name != "id"]
         placeholders = ", ".join("?" for _ in cols)
-        cols_quoted = ", ".join(f'"{c}"' for c in cols)
+        cols_quoted = ", ".join(f'"{col}"' for col in cols)
         insert_sql = f'INSERT INTO "{table_name}" ({cols_quoted}) VALUES ({placeholders});'
 
-        # 3) Detect the delimiter
-        with csv_path.open("r", encoding="utf-8-sig", newline="") as f:
-            header = f.readline()
-            delim = ";" if ";" in header else ("," if "," in header else ";")
-            f.seek(0)
-            reader = csv.DictReader(f, delimiter=delim)
+        # 3) Detecter le delimiteur
+        with csv_path.open("r", encoding="utf-8-sig", newline="") as file:
+            header = file.readline()
+            delim = DEFAULT_DELIMITER if DEFAULT_DELIMITER in header else (
+                FALLBACK_DELIMITER if FALLBACK_DELIMITER in header else DEFAULT_DELIMITER
+            )
+            file.seek(0)
+            reader = csv.DictReader(file, delimiter=delim)
 
-            # 4) Batch insert
+            # 4) Insertion par lots
             batch, total = [], 0
             for row in reader:
-                batch.append([row.get(c) for c in cols])
-                if len(batch) >= CHUNK:
+                batch.append([row.get(col) for col in cols])
+                if len(batch) >= CHUNK_SIZE:
                     conn.executemany(insert_sql, batch)
                     conn.commit()
                     total += len(batch)
                     batch.clear()
+
+            # Inserer le dernier lot
             if batch:
                 conn.executemany(insert_sql, batch)
                 conn.commit()
@@ -122,11 +135,12 @@ def count_rows_raw(db_path: Path, table_name: str) -> int:
     """Compte le nombre de lignes d'une table via SQL brut.
 
     Args:
-        db_path (Path): Chemin du fichier SQLite.
-        table_name (str): Nom de la table a compter.
+        db_path: Chemin du fichier SQLite.
+        table_name: Nom de la table a compter.
 
     Returns:
-        int: Nombre de lignes presentes dans la table.
+        Nombre de lignes presentes dans la table.
     """
     with sqlite3.connect(db_path) as conn:
-        return int(conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()[0])
+        cursor = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"')
+        return int(cursor.fetchone()[0])

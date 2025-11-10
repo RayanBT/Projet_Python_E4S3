@@ -2,21 +2,24 @@
 
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Generator
+from typing import Any, Generator, Type
 
 from sqlalchemy import Column, Integer, MetaData, Table, create_engine, inspect
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, registry, sessionmaker
+
+# Constantes
+DEFAULT_TABLE_PRIMARY_KEY = "id"
 
 
 def get_engine(db_path: Path) -> Engine:
     """Cree un moteur SQLAlchemy pour une base SQLite donnee.
 
     Args:
-        db_path (Path): Chemin du fichier SQLite cible.
+        db_path: Chemin du fichier SQLite cible.
 
     Returns:
-        Engine: Moteur SQLAlchemy configure pour SQLite.
+        Moteur SQLAlchemy configure pour SQLite.
     """
     return create_engine(f"sqlite:///{db_path}", future=True)
 
@@ -26,28 +29,28 @@ def get_session(engine: Engine) -> Generator[Session, None, None]:
     """Ouvre une session SQLAlchemy et la referme automatiquement.
 
     Args:
-        engine (Engine): Moteur SQLAlchemy sur lequel ouvrir la session.
+        engine: Moteur SQLAlchemy sur lequel ouvrir la session.
 
     Yields:
-        Session: Objet Session pret a l'emploi dans un bloc with.
+        Objet Session pret a l'emploi dans un bloc with.
     """
-    SessionLocal = sessionmaker(bind=engine, future=True)
-    session: Session = SessionLocal()
+    session_local = sessionmaker(bind=engine, future=True)
+    session: Session = session_local()
     try:
         yield session
     finally:
         session.close()
 
 
-def reflect_effectifs(engine: Engine, table_name: str):
+def reflect_effectifs(engine: Engine, table_name: str) -> Type[Any]:
     """Mappe dynamiquement une table SQLite vers une classe ORM.
 
     Args:
-        engine (Engine): Moteur SQLAlchemy connecte a la base.
-        table_name (str): Nom de la table a refleter.
+        engine: Moteur SQLAlchemy connecte a la base.
+        table_name: Nom de la table a refleter.
 
     Returns:
-        type: Classe ORM generique associee a la table.
+        Classe ORM generique associee a la table.
 
     Raises:
         LookupError: Si la table demandee n'existe pas dans la base.
@@ -55,7 +58,9 @@ def reflect_effectifs(engine: Engine, table_name: str):
     insp = inspect(engine)
     tables = insp.get_table_names()
     if table_name not in tables:
-        raise LookupError(f"Table introuvable dans la base : '{table_name}'. Tables vues: {tables}")
+        raise LookupError(
+            f"Table introuvable dans la base : '{table_name}'. Tables vues: {tables}"
+        )
 
     pk_info = insp.get_pk_constraint(table_name) or {}
     pk_cols = pk_info.get("constrained_columns") or []
@@ -68,7 +73,7 @@ def reflect_effectifs(engine: Engine, table_name: str):
         table = Table(
             table_name,
             metadata,
-            Column("id", Integer, primary_key=True),
+            Column(DEFAULT_TABLE_PRIMARY_KEY, Integer, primary_key=True),
             autoload_with=engine,
         )
     else:
@@ -81,14 +86,14 @@ def reflect_effectifs(engine: Engine, table_name: str):
     return Effectif
 
 
-def count_rows_orm(session: Session, Effectif) -> int:
+def count_rows_orm(session: Session, effectif_class: Type[Any]) -> int:
     """Compte le nombre de lignes via l'ORM SQLAlchemy.
 
     Args:
-        session (Session): Session SQLAlchemy active.
-        Effectif (type): Classe ORM retournee par reflect_effectifs.
+        session: Session SQLAlchemy active.
+        effectif_class: Classe ORM representant la table effectifs.
 
     Returns:
-        int: Nombre de lignes presentes dans la table.
+        Nombre total de lignes dans la table.
     """
-    return session.query(Effectif).count()
+    return int(session.query(effectif_class).count())

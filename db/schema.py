@@ -1,11 +1,32 @@
 """Schemas Pydantic utilises pour valider les donnees d'effectifs."""
 
+from typing import Any
+
 from pydantic import BaseModel, Field, field_validator
 from pydantic.config import ConfigDict
 
 
 class EffectifBase(BaseModel):
-    """Modele de base partage par les schemas d'entree et de sortie."""
+    """Modele de base partage par les schemas d'entree et de sortie.
+
+    Attributs:
+        annee: Annee de reference des donnees.
+        patho_niv1: Pathologie niveau 1 (categorie principale).
+        patho_niv2: Pathologie niveau 2 (sous-categorie).
+        patho_niv3: Pathologie niveau 3 (detail specifique).
+        top: Indicateur top pathologie.
+        cla_age_5: Classe d'age par tranche de 5 ans.
+        sexe: Code sexe (1=homme, 2=femme).
+        region: Code region.
+        dept: Code departement.
+        ntop: Nombre de cas top pathologie.
+        npop: Population de reference.
+        prev: Taux de prevalence.
+        niveau_prioritaire: Niveau de priorite de la pathologie.
+        libelle_classe_age: Libelle de la classe d'age.
+        libelle_sexe: Libelle du sexe.
+        tri: Valeur de tri.
+    """
 
     annee: int | None = None
     patho_niv1: str | None = None
@@ -28,14 +49,14 @@ class EffectifBase(BaseModel):
 
     @field_validator("annee", "sexe", "Ntop", "Npop", "tri", mode="before")
     @classmethod
-    def empty_string_to_none(cls, value):
+    def empty_string_to_none(cls, value: Any) -> Any:
         """Convertit les chaines vides en None pour faciliter le typage numerique.
 
         Args:
-            value (str | int | float | None): Valeur issue du CSV.
+            value: Valeur issue du CSV.
 
         Returns:
-            int | float | None | str: Valeur nettoyee si besoin.
+            Valeur nettoyee (None si chaine vide, valeur originale sinon).
         """
         if isinstance(value, str) and value.strip() == "":
             return None
@@ -47,16 +68,20 @@ class EffectifCreate(EffectifBase):
 
 
 class EffectifOut(EffectifBase):
-    """Schema de sortie expose par l'API."""
+    """Schema de sortie expose par l'API.
+
+    Attributs:
+        id: Identifiant unique de l'enregistrement.
+    """
 
     id: int
 
 
-def as_pydantic_models():
+def as_pydantic_models() -> tuple[type[EffectifCreate], type[EffectifOut]]:
     """Retourne les schemas utilises par le code historique.
 
     Returns:
-        tuple[type[EffectifCreate], type[EffectifOut]]: Tuple des classes Pydantic.
+        Tuple contenant les classes EffectifCreate et EffectifOut.
     """
     return EffectifCreate, EffectifOut
 

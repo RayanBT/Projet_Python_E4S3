@@ -3,14 +3,14 @@
 from dash import html
 
 
-def header(title: str = "Mon Dashboard"):
+def header(title: str = "Mon Dashboard") -> html.Header:
     """Construit le bandeau d'entete principal.
 
     Args:
-        title (str): Texte a afficher dans la balise titre.
+        title: Texte a afficher dans la balise titre.
 
     Returns:
-        dash.html.Header: Composant Dash representant l'entete.
+        Composant Dash representant l'entete.
     """
     return html.Header(
         className="app-header",

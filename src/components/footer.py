@@ -5,12 +5,8 @@ from datetime import datetime
 from dash import html
 
 
-def footer():
-    """Construit le pied de page avec l'annee courante.
-
-    Returns:
-        dash.html.Footer: Composant Dash representant le pied de page.
-    """
+def footer() -> html.Footer:
+    """Construit le pied de page avec l'annee courante."""
     current_year = datetime.now().year
     return html.Footer(
         className="app-footer",
@@ -22,7 +18,7 @@ def footer():
                         html.Span(f"{current_year} ", className="footer-year"),
                         html.Span("Dashboard Santé France", className="footer-brand")
                     ]),
-                    html.P("Analyse des pathologies et données de santé publique", 
+                    html.P("Analyse des pathologies et données de santé publique",
                           className="footer-description")
                 ]),
                 html.Div(className="footer-links", children=[

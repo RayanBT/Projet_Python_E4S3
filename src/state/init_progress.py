@@ -5,7 +5,11 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass
 from threading import Lock
-from typing import Any, Dict, List
+from typing import Any
+
+# Constantes
+STEP_PREFIX = "[STEP] "
+STEP_PREFIX_LENGTH = 7
 
 
 @dataclass
@@ -13,15 +17,15 @@ class InitializationSnapshot:
     """Photographie immuable de l'etat d'initialisation.
 
     Attributes:
-        messages (List[str]): Ensemble des messages deja emis.
-        completed (bool): Indique si l'operation est terminee.
-        success (bool): Indique si toutes les etapes ont reussi.
-        needs_setup (bool): Precise si la preparation reste necessaire.
-        current_step (str | None): Libelle de l'etape en cours.
-        finished_at (float | None): Timestamp UNIX de fin, si disponible.
+        messages: Ensemble des messages deja emis.
+        completed: Indique si l'operation est terminee.
+        success: Indique si toutes les etapes ont reussi.
+        needs_setup: Precise si la preparation reste necessaire.
+        current_step: Libelle de l'etape en cours.
+        finished_at: Timestamp UNIX de fin, si disponible.
     """
 
-    messages: List[str]
+    messages: list[str]
     completed: bool
     success: bool
     needs_setup: bool
@@ -35,7 +39,7 @@ class InitializationState:
     def __init__(self) -> None:
         """Initialise un etat vide et un verrou de synchronisation."""
         self._lock = Lock()
-        self._messages: List[str] = []
+        self._messages: list[str] = []
         self._completed = False
         self._success = False
         self._needs_setup = False
@@ -46,7 +50,7 @@ class InitializationState:
         """Reinitialise completement l'etat interne.
 
         Args:
-            needs_setup (bool): True si la phase de setup doit etre lancee.
+            needs_setup: True si la phase de setup doit etre lancee.
         """
         with self._lock:
             self._messages.clear()
@@ -56,34 +60,34 @@ class InitializationState:
             self._current_step = "Initialisation en attente" if needs_setup else None
             self._finished_at = None
             if needs_setup:
-                self._messages.append("[STEP] Initialisation en attente")
+                self._messages.append(f"{STEP_PREFIX}Initialisation en attente")
 
     def log(self, message: str) -> None:
         """Ajoute un message au journal et met a jour l'etape si besoin.
 
         Args:
-            message (str): Texte deja formatte (peut commencer par [STEP]).
+            message: Texte deja formatte (peut commencer par [STEP]).
         """
         with self._lock:
-            if message.startswith("[STEP] "):
-                self._current_step = message[7:].strip() or None
+            if message.startswith(STEP_PREFIX):
+                self._current_step = message[STEP_PREFIX_LENGTH:].strip() or None
             self._messages.append(message)
 
     def set_step(self, step: str) -> None:
         """Declare une nouvelle etape et enregistre le message correspondant.
 
         Args:
-            step (str): Libelle humain de l'etape courante.
+            step: Libelle humain de l'etape courante.
         """
         with self._lock:
             self._current_step = step
-            self._messages.append(f"[STEP] {step}")
+            self._messages.append(f"{STEP_PREFIX}{step}")
 
     def mark_complete(self, *, success: bool) -> None:
         """Marque la fin de l'initialisation et stocke le resultat.
 
         Args:
-            success (bool): True si toutes les etapes ont reussi.
+            success: True si toutes les etapes ont reussi.
         """
         with self._lock:
             self._completed = True
@@ -99,7 +103,7 @@ class InitializationState:
         """Cree une copie immutable de l'etat courant.
 
         Returns:
-            InitializationSnapshot: Copie detachee utilisable sans verrou.
+            Copie detachee utilisable sans verrou.
         """
         with self._lock:
             return InitializationSnapshot(
@@ -111,11 +115,11 @@ class InitializationState:
                 finished_at=self._finished_at,
             )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Expose l'etat courant sous forme de dictionnaire serialisable.
 
         Returns:
-            Dict[str, Any]: Etat interne pret a etre stocke dans Dash.
+            Etat interne pret a etre stocke dans Dash.
         """
         snap = self.snapshot()
         return {
@@ -128,4 +132,5 @@ class InitializationState:
         }
 
 
+# Instance globale partagee
 init_state = InitializationState()

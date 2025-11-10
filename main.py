@@ -14,12 +14,17 @@ from src.utils.prepare_data import (
     start_background_label_cleaning,
 )
 
+# Constantes
+WERKZEUG_RELOADER_VAR = "WERKZEUG_RUN_MAIN"
+DEBUG_MODE = True
 
-if __name__ == "__main__":
-    is_reloader = os.environ.get("WERKZEUG_RUN_MAIN") == "true"
+
+def main() -> None:
+    """Lance l'application Dash avec initialisation des données si nécessaire."""
+    is_reloader = os.environ.get(WERKZEUG_RELOADER_VAR) == "true"
     needs_setup = needs_initialization()
     needs_cleaning = needs_label_cleaning() if not needs_setup else False
-    
+
     # Déterminer si on a besoin d'une initialisation (CSV/DB ou nettoyage labels)
     needs_any_setup = needs_setup or needs_cleaning
     init_state.reset(needs_setup=needs_any_setup)
@@ -38,4 +43,8 @@ if __name__ == "__main__":
             print("[INFO] Nettoyage des labels lance en arriere-plan.")
 
     app = create_app(init_state)
-    app.run(debug=True)
+    app.run(debug=DEBUG_MODE)
+
+
+if __name__ == "__main__":
+    main()

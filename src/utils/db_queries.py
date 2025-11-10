@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 import pandas as pd
 from sqlalchemy import create_engine, text
+from sqlalchemy.engine import Engine
 
 
-def get_db_connection(db_path: Path = Path("data/effectifs.sqlite3")):
+def get_db_connection(db_path: Path = Path("data/effectifs.sqlite3")) -> Engine:
     """Cree une connexion a la base de donnees SQLite."""
     return create_engine(f"sqlite:///{db_path}")
 
@@ -41,7 +42,7 @@ def get_pathologies_par_region(
     return pd.read_sql_query(
         query,
         engine,
-        params={"annee": annee, "pathologie": pathologie},
+        params={"annee": annee, "pathologie": pathologie},  # type: ignore[arg-type]
     )
 
 
@@ -73,7 +74,7 @@ def get_pathologies_par_departement(
     return pd.read_sql_query(
         query,
         engine,
-        params={"annee": annee, "pathologie": pathologie},
+        params={"annee": annee, "pathologie": pathologie},  # type: ignore[arg-type]
     )
 
 
@@ -118,7 +119,7 @@ def get_evolution_pathologies(
             "fin": fin_annee,
             "pathologie": pathologie,
             "region": region,
-        },
+        },  # type: ignore[arg-type]
     )
 
 
@@ -148,11 +149,11 @@ def get_repartition_age_sexe(
         params={
             "annee": annee,
             "patho": pathologie,
-        },
+        },  # type: ignore[arg-type]
     )
 
 
-def get_liste_pathologies() -> List[str]:
+def get_liste_pathologies() -> list[str]:
     """Retourne la liste des pathologies principales disponibles."""
     engine = get_db_connection()
     query = text(
@@ -268,7 +269,7 @@ def get_distribution_age(
             "pathologie": pathologie,
             "region": region,
             "sexe": sexe,
-        },
+        },  # type: ignore[arg-type]
     )
 
 
@@ -301,7 +302,7 @@ def get_distribution_prevalence(
             "pathologie": pathologie,
             "region": region,
             "sexe": sexe,
-        },
+        },  # type: ignore[arg-type]
     )
 
 
@@ -334,7 +335,7 @@ def get_distribution_nombre_cas(
             "pathologie": pathologie,
             "region": region,
             "sexe": sexe,
-        },
+        },  # type: ignore[arg-type]
     )
 
 
@@ -367,11 +368,11 @@ def get_distribution_population(
             "pathologie": pathologie,
             "region": region,
             "sexe": sexe,
-        },
+        },  # type: ignore[arg-type]
     )
 
 
-def get_liste_regions() -> List[str]:
+def get_liste_regions() -> list[str]:
     """Retourne la liste des régions disponibles."""
     engine = get_db_connection()
     query = text(

@@ -27,18 +27,23 @@ def load_departements_regions() -> list[DepartementInfo]:
         FileNotFoundError: Si le fichier n'existe pas.
         json.JSONDecodeError: Si le fichier n'est pas un JSON valide.
     """
-    json_path = Path(__file__).resolve().parents[2] / "data" / "geolocalisation" / "departements-regions.json"
-    
+    json_path = (
+        Path(__file__).resolve().parents[2]
+        / "data"
+        / "geolocalisation"
+        / "departements-regions.json"
+    )
+
     if not json_path.exists():
         raise FileNotFoundError(
             f"Le fichier {json_path} n'existe pas. "
             "Lancez l'initialisation avec main.py pour le télécharger."
         )
-    
+
     with json_path.open("r", encoding="utf-8") as f:
         data = json.load(f)
-    
-    return data
+
+    return data  # type: ignore[no-any-return]
 
 
 @lru_cache(maxsize=1)
@@ -71,7 +76,7 @@ def get_region_departments() -> dict[str, list[str]]:
     """
     data = load_departements_regions()
     result: dict[str, list[str]] = {}
-    
+
     for item in data:
         region = item["region_name"]
         num_dep = item["num_dep"]
@@ -80,11 +85,11 @@ def get_region_departments() -> dict[str, list[str]]:
             num_dep = str(num_dep).zfill(2)
         else:
             num_dep = str(num_dep)
-        
+
         if region not in result:
             result[region] = []
         result[region].append(num_dep)
-    
+
     return result
 
 
