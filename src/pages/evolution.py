@@ -5,6 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from src.utils.db_queries import get_evolution_pathologies, get_liste_pathologies
 from src.components.icons import icon_chart_bar, icon_pin
+import math
 
 def create_evolution_figure(debut_annee=2015, fin_annee=2023, pathologies=None, region=None):
     """Crée le graphique d'évolution temporelle des pathologies.
@@ -88,6 +89,58 @@ def create_evolution_figure(debut_annee=2015, fin_annee=2023, pathologies=None, 
         line=dict(width=3),
         marker=dict(size=8)
     )
+    # Ajuster l'échelle Y pour des graduations "propres" :
+    # on cherche un pas arrondi (unité de type 10^n, ou 1/2, 1/4 de cette unité,
+    # ou petits multiples) et on aligne min/max aux multiples de ce pas.
+    try:
+        y_vals = df['total_cas'].dropna()
+        if not y_vals.empty:
+            y_min = float(y_vals.min())
+            y_max = float(y_vals.max())
+            span = y_max - y_min
+            if span <= 0:
+                # données constantes : ajouter un petit padding
+                pad = max(1.0, abs(y_max) * 0.05)
+                new_min = max(0.0, y_min - pad)
+                new_max = y_max + pad
+                fig.update_yaxes(range=[new_min, new_max])
+            else:
+                # cible d'environ 4 intervalles (5 ticks)
+                target_intervals = 4.0
+                raw_step = span / target_intervals
+
+                # Estimer une "unité" basée sur l'ordre de grandeur du maximum
+                # On choisit 10^(digits-1) pour que 13000 -> unité = 1000
+                magnitude = int(math.floor(math.log10(max(1.0, y_max))))
+                unit = int(10 ** max(0, magnitude - 1))
+                unit = max(1, unit)
+
+                # candidats souhaités : 1/4, 1/2, 1, 2, 5, 10 fois l'unité
+                factors = [0.25, 0.5, 1, 2, 5, 10]
+                candidates = [unit * f for f in factors]
+
+                # Choisir le candidat le plus proche du pas brut
+                # mais préférer pas >= raw_step when possible to avoid too fine ticks
+                viable = [c for c in candidates if c >= raw_step]
+                step = None
+                if viable:
+                    # prendre le plus petit viable (le plus proche par excès)
+                    step = min(viable)
+                else:
+                    # aucun viable (raw_step > max candidate), prendre le plus grand candidat
+                    step = max(candidates)
+
+                # Ajuster min/max aux multiples de step
+                new_min = math.floor(y_min / step) * step
+                new_max = math.ceil(y_max / step) * step
+                if new_min == new_max:
+                    new_max = new_min + step
+
+                # Appliquer la nouvelle plage et le pas
+                fig.update_yaxes(range=[new_min, new_max], tick0=new_min, dtick=step)
+    except Exception:
+        # En cas d'erreur, laisser Plotly gérer l'autorange
+        pass
     
     return fig
 
