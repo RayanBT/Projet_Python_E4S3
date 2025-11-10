@@ -154,6 +154,8 @@
     color: #95a5a6 !important;
     font-size: 0.95rem !important;
     padding: 8px 12px !important;
+    display: flex !important;
+    align-items: center !important;
     line-height: 1.5 !important;
 }
 

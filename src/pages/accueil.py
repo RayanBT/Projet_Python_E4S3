@@ -2,7 +2,7 @@
 
 from dash import dcc, html
 
-from src.components.icons import icon_chart_bar, icon_chart_line, icon_video
+from src.components.icons import icon_chart_bar, icon_chart_line, icon_video, icon_chart_spider, icon_map
 
 
 def layout() -> html.Div:
@@ -92,17 +92,31 @@ def layout() -> html.Div:
         html.Div(className="button-group mt-3", children=[
             dcc.Link(
                 html.Button(
-                    [icon_chart_bar("icon-inline"), 'Voir la Carte Choroplèthe'],
-                    className="btn btn-primary"
+                    [icon_map("icon-inline"), "Voir la Carte Choroplèthe"],
+                    className="btn btn-carte"
                 ),
                 href='/carte',
             ),
             dcc.Link(
                 html.Button(
                     [icon_chart_line("icon-inline"), "Voir l'Évolution Temporelle"],
-                    className="btn btn-success"
+                    className="btn btn-evolution"
                 ),
                 href='/evolution',
+            ),
+            dcc.Link(
+                html.Button(
+                    [icon_chart_bar("icon-inline"), "Voir les Histogrammes"],
+                    className="btn btn-histogramme"
+                ),
+                href='/histogramme',
+            ),
+            dcc.Link(
+                html.Button(
+                    [icon_chart_spider("icon-inline"), "Voir le Graphique Radar"],
+                    className="btn btn-radar"
+                ),
+                href='/radar',
             ),
         ])
     ])

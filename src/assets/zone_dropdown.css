@@ -1,3 +1,25 @@
+.zone-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e4e7eb;
+}
+
+.zone-trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.zone-trigger .form-label {
+  text-align: center;
+}
+
 .zone-dropdown {
   position: relative;
   display: inline-block;
@@ -95,22 +117,4 @@
 .zone-main-caret {
   margin-left: 12px;
   color: white;
-}
-
-.zone-main-label {
-  font-size: 12px;
-  color: #2c3e50;
-  text-align: center;
-  margin-bottom: 6px;
-  font-weight: 700; /* 'Zone' en gras */
-}
-
-/* Align zone control to the right inside the flex-controls and reduce its flex so it doesn't expand */
-.page-container .flex-controls > .zone-control {
-  /* Keep the control from growing, push it to the far right and align it to the bottom
-     so it visually lines up with other buttons in the controls bar */
-  flex: 0 0 auto;
-  margin-left: auto;
-  align-self: flex-end; /* ensure bottom alignment inside .flex-controls */
-  min-width: 240px; /* consistent with other controls */
 }

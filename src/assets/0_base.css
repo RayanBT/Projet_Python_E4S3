@@ -298,51 +298,7 @@ body {
     max-width: 1200px;
 }
 
-/* Dash loading spinner - styles personnalisés */
-._dash-loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 400px;
-    position: relative;
-}
-
-._dash-loading-callback {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    flex-direction: column !important;
-    gap: 20px !important;
-    padding: 60px 20px !important;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
-    border-radius: 12px;
-    min-height: 450px;
-}
-
-/* Animation du spinner circle */
-._dash-loading-callback > div {
-    position: relative;
-    filter: drop-shadow(0 4px 12px rgba(102, 126, 234, 0.3));
-}
-
-/* Message de chargement pour le loader de page principal */
-#loading-page ._dash-loading-callback::after {
-    content: "Chargement des données...";
-    font-size: 1rem;
-    color: var(--text-primary);
-    font-weight: 600;
-    animation: pulse 1.5s ease-in-out infinite;
-    letter-spacing: 0.5px;
-}
-
-@keyframes pulse {
-    0%, 100% {
-        opacity: 0.5;
-    }
-    50% {
-        opacity: 1;
-    }
-}
+/* Dash loading spinner - configuration simplifiée */
 
 /* Conteneur de graphique pendant le chargement */
 #evolution-graph, 
@@ -527,7 +483,10 @@ body {
 /* Placeholder */
 .Select-placeholder {
     color: #95a5a6 !important;
-    padding: 8px 0 !important;
+    padding: 8px 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    line-height: 1.5 !important;
 }
 
 /* Flèche du dropdown */
@@ -553,3 +512,96 @@ body {
 .Select-menu-outer::-webkit-scrollbar-thumb:hover {
     background: #5568d3;
 }
+
+/* ========================================
+   ANIMATION DE CHARGEMENT DES PAGES
+   ======================================== */
+
+/* Wrapper du loader */
+.loading-wrapper {
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+/* Pendant le chargement, masquer complètement tout le contenu */
+._dash-loading {
+    min-height: 400px;
+}
+
+._dash-loading .page-content-wrapper,
+._dash-loading .page-content-wrapper *,
+._dash-loading .card,
+._dash-loading .rc-slider,
+._dash-loading .Select {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transition: none !important;
+}
+
+/* Personnalisation du loader Dash */
+._dash-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    width: 100%;
+}
+
+/* Animation du loader circle */
+._dash-loading-callback {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Animation de rotation */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Animation de fondu pour le contenu */
+.page-content-wrapper {
+    animation: fadeIn 0.4s ease-out;
+    /* Masquer initialement pendant le chargement */
+    opacity: 0;
+    animation-fill-mode: forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Empêcher TOUS les éléments d'apparaître avant la fin du chargement */
+.page-content-wrapper * {
+    animation: none !important;
+    animation-delay: 0s !important;
+}
+
+/* Pendant le chargement, tout doit être invisible */
+._dash-loading .page-content-wrapper {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+/* Une fois chargé, tout apparaît en même temps */
+.page-content-wrapper:not(._dash-loading *) {
+    opacity: 1;
+    visibility: visible;
+    animation: fadeIn 0.3s ease-out;
+}
+

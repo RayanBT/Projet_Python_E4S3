@@ -261,14 +261,6 @@ def layout() -> html.Div:
                 html.Button("← Retour à l'accueil", className="btn btn-secondary"),
                 href='/',
             ),
-            dcc.Link(
-                html.Button(
-                    "Voir la carte choroplèthe →",
-                    className="btn btn-primary",
-                    style={'marginLeft': '10px'}
-                ),
-                href='/carte',
-            ),
         ])
 
     ])

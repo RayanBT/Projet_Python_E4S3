@@ -27,6 +27,10 @@ def footer() -> html.Footer:
                     html.A("Carte", href="/carte", className="footer-link"),
                     html.Span("•", className="footer-separator"),
                     html.A("Évolution", href="/evolution", className="footer-link"),
+                    html.Span("•", className="footer-separator"),
+                    html.A("Histogrammes", href="/histogramme", className="footer-link"),
+                    html.Span("•", className="footer-separator"),
+                    html.A("Radar", href="/radar", className="footer-link"),
                 ])
             ])
         ]

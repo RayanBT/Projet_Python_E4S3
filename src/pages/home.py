@@ -75,7 +75,13 @@ def create_app(init_state: InitializationState) -> Dash:
                 n_intervals=0,
                 disabled=not initial_status["needs_setup"],
             ),
-            html.Div(id="page-content", className="page-content-wrapper"),
+            dcc.Loading(
+                id="page-loading",
+                type="circle",  # Options: "graph", "cube", "circle", "dot", "default"
+                children=html.Div(id="page-content", className="page-content-wrapper"),
+                color="#2563eb",  # Couleur bleue moderne
+                className="loading-wrapper"
+            ),
             footer(),
         ]
     )

@@ -644,6 +644,53 @@ def layout() -> html.Div:
             html.Div(
                 className="card",
                 children=[
+                    # Première ligne : Zone (centré)
+                    html.Div(className="zone-control", children=[
+                        # Store to hold zone selection
+                        dcc.Store(id="carte-zone-store", data={"scope": "france", "selected": None}),
+
+                        html.Div(
+                            className="zone-dropdown",
+                            children=[
+                                html.Div(
+                                    className="zone-trigger",
+                                    children=[
+                                        html.Label("Zone", className="form-label"),
+                                        html.Button(
+                                            [
+                                                html.Span("Toute la France", className="zone-main-selected"),
+                                                html.Span(" ▾", className="zone-main-caret"),
+                                            ],
+                                            className="zone-btn",
+                                            id="zone-main-btn",
+                                        ),
+                                    ],
+                                ),
+                                html.Div(
+                                    className="zone-menu",
+                                    children=[
+                                        html.Button("Toute la France", className="zone-item", id="zone-france"),
+                                        html.Button("Métropole", className="zone-item", id="zone-metropole"),
+                                        html.Div([  # Outre-Mer with submenu
+                                            html.Button("Outre-Mer ▶", className="zone-item outremer", id="zone-outremer"),
+                                            html.Div(
+                                                className="submenu",
+                                                children=[
+                                                    html.Button("Guadeloupe", className="zone-item", id="zone-om-Guadeloupe"),
+                                                    html.Button("Martinique", className="zone-item", id="zone-om-Martinique"),
+                                                    html.Button("Guyane", className="zone-item", id="zone-om-Guyane"),
+                                                    html.Button("La Réunion", className="zone-item", id="zone-om-La_Reunion"),
+                                                    html.Button("Mayotte", className="zone-item", id="zone-om-Mayotte"),
+                                                ],
+                                            ),
+                                        ]),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ]),
+                    
+                    # Deuxième ligne : Autres contrôles
                     html.Div(
                         className="flex-controls",
                         children=[
@@ -652,8 +699,8 @@ def layout() -> html.Div:
                                 dcc.Dropdown(
                                     id="carte-niveau-geo-dropdown",
                                     options=[  # type: ignore[arg-type]
-                                        {"label": "🌍 Régions (18 régions)", "value": "region"},
-                                        {"label": "📍 Départements (101 départements)", "value": "departement"}
+                                        {"label": "🌍 Régions (18)", "value": "region"},
+                                        {"label": "📍 Départements (101)", "value": "departement"}
                                     ],
                                     value="region",
                                     clearable=False,
@@ -708,50 +755,6 @@ def layout() -> html.Div:
                                     clearable=False,
                                 ),
                             ]),
-                            html.Div(className="zone-control", children=[
-                                # Store to hold zone selection
-                                dcc.Store(id="carte-zone-store", data={"scope": "france", "selected": None}),
-
-                                html.Div(
-                                    className="zone-dropdown",
-                                    children=[
-                                        html.Div(
-                                            className="zone-trigger",
-                                            children=[
-                                                html.Div("Zone", className="zone-main-label"),
-                                                html.Button(
-                                                    [
-                                                        html.Span("Toute la France", className="zone-main-selected"),
-                                                        html.Span(" ▾", className="zone-main-caret"),
-                                                    ],
-                                                    className="zone-btn",
-                                                    id="zone-main-btn",
-                                                ),
-                                            ],
-                                        ),
-                                        html.Div(
-                                            className="zone-menu",
-                                            children=[
-                                                html.Button("Toute la France", className="zone-item", id="zone-france"),
-                                                html.Button("Métropole", className="zone-item", id="zone-metropole"),
-                                                html.Div([  # Outre-Mer with submenu
-                                                    html.Button("Outre-Mer ▶", className="zone-item outremer", id="zone-outremer"),
-                                                    html.Div(
-                                                        className="submenu",
-                                                        children=[
-                                                            html.Button("Guadeloupe", className="zone-item", id="zone-om-Guadeloupe"),
-                                                            html.Button("Martinique", className="zone-item", id="zone-om-Martinique"),
-                                                            html.Button("Guyane", className="zone-item", id="zone-om-Guyane"),
-                                                            html.Button("La Réunion", className="zone-item", id="zone-om-La_Reunion"),
-                                                            html.Button("Mayotte", className="zone-item", id="zone-om-Mayotte"),
-                                                        ],
-                                                    ),
-                                                ]),
-                                            ],
-                                        ),
-                                    ],
-                                ),
-                            ]),
                         ],
                     ),
                 ],
@@ -776,6 +779,14 @@ def layout() -> html.Div:
                     html.Div(id="carte-stats"),
                 ],
             ),
+            
+            # Bouton de navigation
+            html.Div(className="text-center mt-3", children=[
+                dcc.Link(
+                    html.Button("← Retour à l'accueil", className="btn btn-secondary"),
+                    href='/',
+                ),
+            ])
         ],
     )
 

@@ -256,10 +256,7 @@ def layout() -> html.Div:
                                             if p in ALLOWED_PATHOLOGIES
                                         ],
                                         value=None,
-                                        placeholder=(
-                                            "Sélectionnez une pathologie "
-                                            "(ayant des sous-pathologies)"
-                                        ),
+                                        placeholder="Sélectionnez une sous-pathologie",
                                         clearable=True,
                                     ),
                                 ],

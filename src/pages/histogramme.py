@@ -159,6 +159,14 @@ def layout() -> html.Div:
                         className="chart-container",
                     ),
                     html.Div(id="histogram-stats", className="stats-container"),
+                    
+                    # Bouton de navigation
+                    html.Div(className="text-center mt-3", children=[
+                        dcc.Link(
+                            html.Button("← Retour à l'accueil", className="btn btn-secondary"),
+                            href='/',
+                        ),
+                    ])
                 ],
                 className="page-container",
             )

@@ -67,6 +67,7 @@
 }
 
 /* Dropdown styling */
+.page-container .Select-control,
 .page-container .filter-dropdown .Select-control {
     border-radius: 6px !important;
     border: 2px solid #e4e7eb !important;
@@ -74,13 +75,33 @@
     transition: border-color 0.3s ease;
 }
 
+.page-container .Select-control:hover,
 .page-container .filter-dropdown .Select-control:hover {
     border-color: #EC4899 !important;
 }
 
+.page-container .Select-control:focus,
 .page-container .filter-dropdown .Select-control:focus {
     border-color: #EC4899 !important;
     box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+}
+
+/* Texte du dropdown - permettre le wrap */
+.page-container .Select-value-label,
+.page-container .Select-placeholder {
+    white-space: normal !important;
+    line-height: 1.4 !important;
+    padding: 8px 12px !important;
+    overflow: visible !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* Conteneur du dropdown pour gérer la hauteur automatique */
+.page-container .Select-value {
+    line-height: normal !important;
+    height: auto !important;
+    min-height: 30px !important;
 }
 
 /* Dropdown menu options */
