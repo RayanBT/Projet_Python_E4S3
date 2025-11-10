@@ -1,5 +1,6 @@
 """Page dédiée à l'évolution temporelle des pathologies."""
 
+import math
 from typing import Any
 
 from dash import Input, Output, callback, clientside_callback, dcc, html
@@ -67,7 +68,7 @@ def create_evolution_figure(
         markers=True,
         hover_data={"annee": True, "total_cas": ":,.0f", "patho_niv1": True}
     )
-    
+
     fig.update_layout(
         height=600,
         hovermode='x unified',
@@ -92,7 +93,47 @@ def create_evolution_figure(
         marker={"size": 8}
     )
 
+    # Ajuster l'échelle Y pour des graduations "propres"
+    try:
+        y_vals = df['total_cas'].dropna()
+        if not y_vals.empty:
+            y_min = float(y_vals.min())
+            y_max = float(y_vals.max())
+            span = y_max - y_min
+            if span <= 0:
+                pad = max(1.0, abs(y_max) * 0.05)
+                new_min = max(0.0, y_min - pad)
+                new_max = y_max + pad
+                fig.update_yaxes(range=[new_min, new_max])
+            else:
+                target_intervals = 4.0
+                raw_step = span / target_intervals
+
+                magnitude = int(math.floor(math.log10(max(1.0, y_max))))
+                unit = int(10 ** max(0, magnitude - 1))
+                unit = max(1, unit)
+
+                factors = [0.25, 0.5, 1, 2, 5, 10]
+                candidates = [unit * f for f in factors]
+
+                viable = [c for c in candidates if c >= raw_step]
+                step = None
+                if viable:
+                    step = min(viable)
+                else:
+                    step = max(candidates)
+
+                new_min = math.floor(y_min / step) * step
+                new_max = math.ceil(y_max / step) * step
+                if new_min == new_max:
+                    new_max = new_min + step
+
+                fig.update_yaxes(range=[new_min, new_max], tick0=new_min, dtick=step)
+    except Exception:
+        pass
+
     return fig
+
 
 def layout() -> html.Div:
     """Construit le layout de la page évolution temporelle."""
@@ -327,19 +368,18 @@ def update_stats(
     if not figure or 'data' not in figure or not figure['data']:
         return html.P("Aucune donnée disponible", className="text-center text-muted")
 
-    yearly_totals: dict[int, float] = {}  # {année_index: total}
-    total_values = []  # Pour stocker toutes les valeurs pour le calcul de la moyenne
+    yearly_totals: dict[int, float] = {}
+    total_values = []
     stats_components = []
-    
+
     for trace in figure['data']:
         try:
-            # Obtenir le nom de la pathologie
             patho_name = trace.get('name', 'Inconnue')
-            
-            # Extraire les valeurs numériques uniquement
-            if 'y' not in trace or not isinstance(trace['y'], dict) or '_inputArray' not in trace['y']:
+
+            if ('y' not in trace or not isinstance(trace['y'], dict)
+                    or '_inputArray' not in trace['y']):
                 continue
-                
+
             input_array = trace['y']['_inputArray']
             values = []
 
@@ -444,7 +484,7 @@ def update_stats(
                 )
             ]
         )]
-    
+
     return html.Div(
         className="stats-grid",
         children=stats_components if stats_components else html.P(
