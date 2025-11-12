@@ -41,3 +41,9 @@ def icon_pin(class_name: str = "icon") -> html.Span:
 def icon_chart_spider(class_name: str = "icon") -> html.Span:
     """Icône Graphique en toile d'araignée/radar."""
     return html.Span("🕸️", className=class_name)
+
+
+def icon_pie_chart(class_name: str = "icon") -> html.Span:
+    """Icône Graphique en camembert."""
+    return html.Span("🧀", className=class_name)
+

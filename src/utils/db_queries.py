@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 import pandas as pd
 from sqlalchemy import create_engine, text
@@ -384,3 +384,68 @@ def get_liste_regions() -> list[str]:
         """
     )
     return pd.read_sql_query(query, engine)["region"].tolist()
+
+
+def get_annees_disponibles() -> list[int]:
+    """Retourne la liste des années disponibles dans la base."""
+    engine = get_db_connection()
+    query = text(
+        """
+        SELECT DISTINCT annee
+        FROM effectifs
+        ORDER BY annee DESC
+        """
+    )
+    return pd.read_sql_query(query, engine)["annee"].tolist()
+
+
+def get_repartition_gravite(
+    annee: int = 2023,
+    region: Optional[str] = None,
+    pathologie: Optional[str] = None
+) -> pd.DataFrame:
+    """
+    Retourne la répartition par niveau de gravité (Niveau prioritaire).
+    
+    Args:
+        annee: Année pour le filtre
+        region: Code région optionnel (None = toutes régions)
+        pathologie: Pathologie niveau 1 optionnelle (None = toutes pathologies)
+    
+    Returns:
+        DataFrame avec colonnes: Niveau_prioritaire, total_cas
+    """
+    engine = get_db_connection()
+    
+    # Construction de la requête
+    conditions = [
+        "annee = :annee",
+        "cla_age_5 = 'tsage'",
+        "\"Niveau prioritaire\" IS NOT NULL"
+    ]
+    
+    params = {"annee": annee}
+    
+    if region and region != 'Toutes':
+        conditions.append("region = :region")
+        params["region"] = region
+    
+    if pathologie and pathologie != 'Toutes':
+        conditions.append("patho_niv1 = :pathologie")
+        params["pathologie"] = pathologie
+    
+    where_clause = " AND ".join(conditions)
+    
+    query = text(
+        f"""
+        SELECT 
+            "Niveau prioritaire" AS Niveau_prioritaire,
+            SUM(Ntop) AS total_cas
+        FROM effectifs
+        WHERE {where_clause}
+        GROUP BY "Niveau prioritaire"
+        ORDER BY "Niveau prioritaire"
+        """
+    )
+    
+    return pd.read_sql_query(query, engine, params=params)

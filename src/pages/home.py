@@ -19,6 +19,7 @@ import src.pages.carte as carte_module
 import src.pages.evolution as evolution_module
 import src.pages.histogramme as histogramme_module
 import src.pages.radar as radar_module
+import src.pages.camembert as camembert_module
 
 COMPLETION_DELAY = 2.0
 
@@ -140,6 +141,8 @@ def create_app(init_state: InitializationState) -> Dash:
             return histogramme_module.layout()
         if pathname == "/radar":
             return radar_module.layout()
+        if pathname == "/camembert":
+            return camembert_module.layout()
         if pathname == "/about":
             return html.H2("Page a propos")
 
@@ -147,3 +150,4 @@ def create_app(init_state: InitializationState) -> Dash:
         return accueil_module.layout()
 
     return app
+
