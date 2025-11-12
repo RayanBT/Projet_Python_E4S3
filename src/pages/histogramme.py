@@ -29,6 +29,28 @@ def layout() -> html.Div:
     """Layout de la page histogrammes."""
     pathologies = get_liste_pathologies()
     regions = get_liste_regions()
+    
+    # Mapping des codes régions vers les noms
+    region_names = {
+        "01": "Guadeloupe",
+        "02": "Martinique",
+        "03": "Guyane",
+        "04": "La Réunion",
+        "06": "Mayotte",
+        "11": "Île-de-France",
+        "24": "Centre-Val de Loire",
+        "27": "Bourgogne-Franche-Comté",
+        "28": "Normandie",
+        "32": "Hauts-de-France",
+        "44": "Grand Est",
+        "52": "Pays de la Loire",
+        "53": "Bretagne",
+        "75": "Nouvelle-Aquitaine",
+        "76": "Occitanie",
+        "84": "Auvergne-Rhône-Alpes",
+        "93": "Provence-Alpes-Côte d'Azur",
+        "94": "Corse",
+    }
 
     return html.Div(
         [
@@ -122,7 +144,7 @@ def layout() -> html.Div:
                                         id="histogram-region",
                                         options=[{"label": "Toutes", "value": "all"}]
                                         + [
-                                            {"label": f"Région {r}", "value": r}
+                                            {"label": f"{region_names.get(r, f'Région {r}')} ({r})", "value": r}
                                             for r in regions
                                         ],
                                         value="all",
@@ -410,49 +432,77 @@ def update_histogram(
 
     if not df.empty:
         tick_config: dict[str, Any] = {}
+        # Sauvegarder les valeurs originales pour les stats
+        df_original = df.copy()
 
         if histogram_type == "age":
-            customdata = [x + 10 if x < 90 else "99+" for x in df[x_col]]
+            # Décaler les barres de 5 pour centrer les ticks entre elles
+            df[x_col] = df[x_col] + 5
+            # Créer les tranches d'âge pour les barres
+            df['age_tranche'] = df_original[x_col].apply(lambda x: f"{x}-{x+9}" if x < 90 else "90+")
             hovertemplate = (
-                f"<b>Âge %{{x}} à %{{customdata}} ans</b><br>"
                 f"{yaxis_title}: %{{y:,.0f}}<extra></extra>"
             )
-            bar_width = 9.8
-            x_range = [-5, 105]
-            tick_config = {"tickmode": "linear", "tick0": 0, "dtick": 10}
+            bar_width = 8.0
+            x_range = [0, 105]
+            # Ticks simples entre les barres (10, 20, 30, etc.)
+            tick_config = {"tickmode": "linear", "tick0": 10, "dtick": 10}
             tickangle = 0
             bargap_value = 0.0
 
         elif histogram_type == "prevalence":
-            customdata = [x + 5 for x in df[x_col]]
+            # Décaler les barres de 2.5 pour centrer les ticks entre elles
+            df[x_col] = df[x_col] + 2.5
+            # Créer les tranches de prévalence pour les barres
+            df['prev_tranche'] = df_original[x_col].apply(lambda x: f"{x}-{x+4}")
             hovertemplate = (
-                f"<b>Prévalence %{{x}}% à %{{customdata}}%</b><br>"
                 f"{yaxis_title}: %{{y:,.0f}}<extra></extra>"
             )
-            bar_width = 4.9
+            bar_width = 4.0
             max_prev: Any = df[x_col].max()
-            x_range = [-2, max_prev + 7]
-            tick_config = {"tickmode": "linear", "tick0": 0, "dtick": 5}
+            x_range = [0, max_prev + 5]
+            # Ticks simples entre les barres (5, 10, 15, etc.)
+            tick_config = {"tickmode": "linear", "tick0": 5, "dtick": 5}
             tickangle = 0
             bargap_value = 0.0
 
         elif histogram_type == "nombre_cas":
+            # Convertir en indices numériques et décaler de 0.5
+            df['x_numeric'] = [i + 0.5 for i in range(len(df))]
             hovertemplate = (
-                f"<b>%{{x}}</b><br>{yaxis_title}: %{{y:,.0f}}<extra></extra>"
+                f"{yaxis_title}: %{{y:,.0f}}<extra></extra>"
             )
-            bar_width = None
-            x_range = None
+            x_col_display = 'x_numeric'
+            bar_width = 0.8
+            x_range = [0, len(df)]
+            # Configurer les ticks entre les barres (pas au centre)
+            original_labels = df_original[x_col].tolist()
+            tick_config = {
+                "tickmode": "array",
+                "tickvals": list(range(1, len(df))),
+                "ticktext": original_labels[1:]
+            }
             tickangle = -45
-            bargap_value = 0.02
+            bargap_value = 0.0
 
         elif histogram_type == "population":
+            # Convertir en indices numériques et décaler de 0.5
+            df['x_numeric'] = [i + 0.5 for i in range(len(df))]
             hovertemplate = (
-                f"<b>%{{x}}</b><br>{yaxis_title}: %{{y:,.0f}}<extra></extra>"
+                f"{yaxis_title}: %{{y:,.0f}}<extra></extra>"
             )
-            bar_width = None
-            x_range = None
+            x_col_display = 'x_numeric'
+            bar_width = 0.8
+            x_range = [0, len(df)]
+            # Configurer les ticks entre les barres (pas au centre)
+            original_labels = df_original[x_col].tolist()
+            tick_config = {
+                "tickmode": "array",
+                "tickvals": list(range(1, len(df))),
+                "ticktext": original_labels[1:]
+            }
             tickangle = -45
-            bargap_value = 0.02
+            bargap_value = 0.0
         else:
             hovertemplate = (
                 f"<b>%{{x}}</b><br>{yaxis_title}: %{{y:,.0f}}<extra></extra>"
@@ -461,17 +511,30 @@ def update_histogram(
             x_range = None
             tickangle = 0
             bargap_value = 0.02
+            x_col_display = x_col
+
+        # Utiliser x_col_display si défini, sinon x_col
+        if histogram_type in ["nombre_cas", "population"]:
+            x_values = df['x_numeric']
+        else:
+            x_values = df[x_col]
 
         bar_data = {
-            "x": df[x_col],
+            "x": x_values,
             "y": df[y_col],
             "marker": {"color": "#EC4899", "line": {"color": "#BE185D", "width": 0.5}},
             "hovertemplate": hovertemplate,
         }
-        if histogram_type in ["age", "prevalence"]:
-            bar_data["customdata"] = customdata
         if bar_width is not None:
             bar_data["width"] = bar_width
+        
+        # Ajouter le texte personnalisé pour le hover de l'axe X
+        if histogram_type == "age" and 'age_tranche' in df.columns:
+            bar_data["text"] = df['age_tranche']
+            bar_data["textposition"] = "none"
+        elif histogram_type == "prevalence" and 'prev_tranche' in df.columns:
+            bar_data["text"] = df['prev_tranche']
+            bar_data["textposition"] = "none"
 
         fig = go.Figure(data=[go.Bar(**bar_data)])
 
@@ -483,6 +546,10 @@ def update_histogram(
 
         if x_range is not None:
             xaxis_config["range"] = x_range
+        
+        # Ajouter hoverformat pour afficher le texte personnalisé
+        if histogram_type in ["age", "prevalence"]:
+            xaxis_config["hoverformat"] = ""
 
         fig.update_layout(
             title={"text": title, "x": 0.5, "xanchor": "center", "font": {"size": 20}},
@@ -493,7 +560,14 @@ def update_histogram(
             height=500,
             margin={"l": 50, "r": 50, "t": 80, "b": 120},
             xaxis=xaxis_config,
+            yaxis={"rangemode": "tozero", "showticklabels": True},
             bargap=bargap_value,
+            hoverlabel={
+                "bgcolor": "#2563eb",  # Bleu du header
+                "font_size": 13,
+                "font_family": "Arial",
+                "font_color": "white"
+            }
         )
 
 
@@ -502,8 +576,8 @@ def update_histogram(
         max_val = df[y_col].max()
         min_val = df[y_col].min()
 
-        max_idx = df[df[y_col] == max_val].index[0]
-        max_label: Any = df.loc[max_idx, x_col]
+        max_idx = df_original[df_original[y_col] == max_val].index[0]
+        max_label: Any = df_original.loc[max_idx, x_col]
 
         if histogram_type == "age":
             age_start_val = int(max_label)
