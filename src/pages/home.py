@@ -20,6 +20,7 @@ import src.pages.evolution as evolution_module
 import src.pages.histogramme as histogramme_module
 import src.pages.radar as radar_module
 import src.pages.camembert as camembert_module
+import src.pages.apropos as apropos_module
 
 COMPLETION_DELAY = 2.0
 
@@ -143,8 +144,8 @@ def create_app(init_state: InitializationState) -> Dash:
             return radar_module.layout()
         if pathname == "/camembert":
             return camembert_module.layout()
-        if pathname == "/about":
-            return html.H2("Page a propos")
+        if pathname == "/about" or pathname == "/apropos":
+            return apropos_module.layout()
 
         # Page d'accueil par défaut
         return accueil_module.layout()

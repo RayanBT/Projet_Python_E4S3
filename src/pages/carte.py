@@ -632,7 +632,7 @@ def layout() -> html.Div:
         children=[
             # En-tête
             html.Div(className="mb-3", children=[
-                html.H1("Carte Choroplèthe - Prévalence des Pathologies", className="page-title text-center"),
+                html.H1("Carte - Prévalence des Pathologies", className="page-title text-center"),
                 html.P(
                     "Explorez la répartition géographique des pathologies en France. "
                     "Ajustez les filtres pour personnaliser votre analyse.",

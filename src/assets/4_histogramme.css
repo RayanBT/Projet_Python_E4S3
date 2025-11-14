@@ -9,6 +9,10 @@
     justify-content: center;
     gap: 16px;
     margin-bottom: 10px;
+    background-color: white !important;
+    background: white !important;
+    padding: 20px;
+    border-radius: 8px;
 }
 
 /* Page title */
@@ -301,6 +305,7 @@
 @media (max-width: 480px) {
     .page-container .page-title {
         font-size: 1.75rem;
+        color: #2c3e50;
     }
     
     .page-container .icon-large {

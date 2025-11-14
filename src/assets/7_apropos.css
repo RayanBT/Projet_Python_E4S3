@@ -1,0 +1,111 @@
+/* ========================================
+   STYLES SPÉCIFIQUES - PAGE À PROPOS
+   ======================================== */
+
+/* Page header with icon */
+.page-container .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 10px;
+}
+
+/* Page title */
+.page-container .page-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #2c3e50;
+    text-align: center;
+    margin: 0;
+}
+
+/* Page description */
+.page-container .page-description {
+    text-align: center;
+    color: #7f8c8d;
+    font-size: 1.1rem;
+    margin-bottom: 40px;
+    line-height: 1.6;
+}
+
+/* About section container */
+.about-section {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    border: 1px solid #e4e7eb;
+    margin-bottom: 30px;
+}
+
+/* Section title */
+.section-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #2563eb;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #2563eb;
+}
+
+/* Section text */
+.section-text {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: #2c3e50;
+    text-align: justify;
+}
+
+/* Button styling */
+.btn {
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+/* Text center utility */
+.text-center {
+    text-align: center;
+}
+
+/* Margin top utility */
+.mt-3 {
+    margin-top: 30px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .page-container .page-title {
+        font-size: 2rem;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+    }
+
+    .about-section {
+        padding: 20px;
+    }
+
+    .section-text {
+        font-size: 1rem;
+    }
+}

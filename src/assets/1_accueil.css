@@ -107,7 +107,8 @@
 .page-container .btn-carte,
 .page-container .btn-evolution,
 .page-container .btn-histogramme,
-.page-container .btn-radar {
+.page-container .btn-radar,
+.page-container .btn-camembert {
     padding: 12px 20px;
     font-size: 0.95rem;
     border: none;
@@ -164,6 +165,17 @@
 /* Rendre l'emoji du radar plus visible */
 .page-container .btn-radar .icon-inline {
     filter: brightness(1.5) contrast(1.2);
+}
+
+.page-container .btn-camembert {
+    background-color: #d4af37;
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.page-container .btn-camembert:hover {
+    background-color: #b8941e;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(212, 175, 55, 0.4);
 }
 
 /* HR styling */
