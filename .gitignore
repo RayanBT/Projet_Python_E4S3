@@ -43,3 +43,17 @@ logs/
 *.tmp
 *.temp
 .cache/
+
+# === Tests ===
+# Couverture de code
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+*.cover
+coverage.xml
+.tox/
+
+# Rapports de tests
+test-results.xml
+junit.xml

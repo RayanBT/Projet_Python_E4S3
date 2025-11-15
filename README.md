@@ -484,6 +484,327 @@ CSV_URL: Final[str] = "votre-url-csv-ici"
 
 ---
 
+## 🧪 Tests Unitaires
+
+Le projet intègre une suite complète de **60 tests unitaires** avec pytest pour garantir la qualité et la fiabilité du code.
+
+### Installation des Dépendances de Test
+
+Les dépendances de test sont incluses dans `requirements.txt`. Si besoin de les installer séparément :
+
+```bash
+pip install pytest pytest-cov pytest-mock
+```
+
+### Lancer les Tests
+
+#### Commandes de Base
+
+```bash
+# Tous les tests (60 tests)
+pytest
+
+# Mode verbeux avec détails
+pytest -v
+
+# Tests avec couverture de code
+pytest --cov=src --cov-report=term-missing
+
+# Rapport HTML de couverture
+pytest --cov=src --cov-report=html
+# Puis ouvrir htmlcov/index.html dans un navigateur
+
+# Tests unitaires uniquement (rapides, sans tests d'intégration)
+pytest -m "not slow"
+
+# Tests spécifiques d'un module
+pytest tests/test_db_queries.py
+pytest tests/test_clean_data.py
+
+# Arrêter au premier échec
+pytest -x
+
+# Mode quiet (affichage minimal)
+pytest -q
+```
+
+#### Script de Développement Multi-Plateforme
+
+Utilisez `run_tests.py` pour toutes les tâches de développement (Windows, Linux, Mac) :
+
+```bash
+# TESTS
+python run_tests.py test                # Tous les tests
+python run_tests.py test --unit         # Tests unitaires uniquement
+python run_tests.py test --cov          # Tests avec couverture
+python run_tests.py test --html         # Rapport HTML de couverture
+python run_tests.py test --failed       # Ré-exécuter les tests échoués
+
+# INSTALLATION
+python run_tests.py install             # Installer les dépendances
+python run_tests.py install --dev       # Installer dépendances + outils dev
+
+# APPLICATION
+python run_tests.py run                 # Lancer l'application Dash
+
+# MAINTENANCE
+python run_tests.py clean               # Nettoyer fichiers temporaires
+
+# AIDE
+python run_tests.py help                # Afficher toutes les commandes
+```
+
+### Organisation des Tests
+
+```
+tests/
+├── conftest.py              # Configuration pytest et fixtures partagées
+├── test_clean_data.py       # 10 tests - Nettoyage de données CSV
+├── test_db_queries.py       # 16 tests - Requêtes SQL et agrégations
+├── test_utils.py            # 20 tests - Fonctions utilitaires
+├── test_integration.py      # 14 tests - Tests d'intégration avec vraie DB
+├── BEST_PRACTICES.md        # Standards de code et conventions
+└── SUMMARY.md               # Vue d'ensemble de la stratégie de tests
+```
+
+### Couverture de Code
+
+**Résultats actuels** :
+- ✅ **60/60 tests passent** (100% de réussite)
+- 📊 `src/utils/clean_data.py` : **54%** de couverture
+- 📊 `src/utils/db_queries.py` : **44%** de couverture
+- 📊 **Couverture globale** : 9% (modules UI non testés)
+
+**Note** : Les pages Dash (0% couverture) nécessitent des tests fonctionnels spécifiques (Selenium/Playwright), non inclus dans cette suite.
+
+### Types de Tests
+
+#### 1. Tests de Nettoyage de Données (`test_clean_data.py`)
+
+Vérifient le nettoyage et la normalisation des données CSV :
+- Suppression des valeurs manquantes
+- Conservation des colonnes optionnelles
+- Raccourcissement des noms de pathologies
+- Gestion des cas limites (fichiers vides, encodage UTF-8)
+
+#### 2. Tests de Requêtes SQL (`test_db_queries.py`)
+
+Testent les fonctions d'interrogation de la base SQLite :
+- Connexion à la base de données
+- Requêtes d'agrégation par région/département
+- Évolution temporelle des pathologies
+- Calculs de prévalence
+- Gestion des erreurs (années invalides, régions inexistantes)
+
+#### 3. Tests Utilitaires (`test_utils.py`)
+
+Valident les fonctions de transformation et validation :
+- Validation de formats (années, codes région/département)
+- Opérations sur DataFrames (groupby, filtres, tri)
+- Calculs statistiques (prévalence, pourcentages)
+- Conversions de types
+
+#### 4. Tests d'Intégration (`test_integration.py`)
+
+Tests avec la vraie base de données :
+- Vérification de l'existence et structure de la DB
+- Cohérence des données (années 2015-2023)
+- Intégrité des pathologies et labels nettoyés
+- Performance des requêtes (<15s)
+- Validation du schéma et des colonnes
+
+### Écrire un Nouveau Test
+
+Exemple de test suivant le pattern **AAA (Arrange-Act-Assert)** :
+
+```python
+import pytest
+from src.utils.db_queries import get_pathologies_par_region
+
+def test_get_pathologies_par_region_filtre_annee():
+    """
+    Vérifie que la fonction filtre correctement par année.
+    
+    Pattern AAA :
+    - Arrange : Préparer les paramètres
+    - Act : Exécuter la fonction
+    - Assert : Vérifier les résultats
+    """
+    # Arrange (préparer)
+    annee = 2023
+    pathologie = "Diabète"
+    
+    # Act (exécuter)
+    df = get_pathologies_par_region(annee, pathologie)
+    
+    # Assert (vérifier)
+    assert not df.empty, "Le DataFrame ne doit pas être vide"
+    assert 'region' in df.columns, "La colonne 'region' doit exister"
+    assert all(df['annee'] == annee), f"Toutes les lignes doivent être de l'année {annee}"
+```
+
+### Fixtures Communes
+
+Le fichier `conftest.py` fournit des fixtures réutilisables :
+
+```python
+@pytest.fixture
+def project_root():
+    """Chemin racine du projet."""
+    return Path(__file__).parent.parent
+
+@pytest.fixture
+def sample_csv_data():
+    """DataFrame de test avec données CSV."""
+    return pd.DataFrame({
+        'annee': ['2023', '2023'],
+        'region': ['11', '24'],
+        'Ntop': ['100', '200'],
+        'Npop': ['10000', '20000']
+    })
+```
+
+### Markers pytest
+
+Les tests sont organisés avec des markers :
+
+```python
+@pytest.mark.unit          # Test unitaire (rapide)
+@pytest.mark.integration   # Test d'intégration (avec DB)
+@pytest.mark.slow          # Test lent (>2 secondes)
+```
+
+Utilisation :
+```bash
+# Uniquement tests unitaires rapides
+pytest -m "unit"
+
+# Exclure tests lents
+pytest -m "not slow"
+
+# Uniquement tests d'intégration
+pytest -m "integration"
+```
+
+### Résolution de Problèmes
+
+#### Tests échouent avec "ModuleNotFoundError"
+
+```bash
+# Assurez-vous que l'environnement virtuel est activé
+.\venv\Scripts\Activate.ps1  # Windows
+source venv/bin/activate      # Linux/Mac
+
+# Réinstallez les dépendances
+pip install -r requirements.txt
+```
+
+#### Erreur "Database is locked" (Windows)
+
+Les tests créent des bases SQLite temporaires. Sur Windows, des verrous peuvent persister :
+
+```bash
+# Nettoyez les fichiers temporaires
+python run_tests.py clean
+```
+
+#### Tests d'intégration échouent
+
+Les tests d'intégration nécessitent la base de données réelle :
+
+```bash
+# Assurez-vous que la DB existe
+python main.py  # Lance l'init si besoin
+
+# Puis relancez les tests
+pytest tests/test_integration.py
+```
+
+### Bonnes Pratiques
+
+1. **Lancer les tests avant chaque commit**
+   ```bash
+   pytest -x  # Arrête au premier échec
+   ```
+
+2. **Vérifier la couverture régulièrement**
+   ```bash
+   pytest --cov=src --cov-report=term-missing
+   ```
+
+3. **Tester les cas limites**
+   - Valeurs NULL, chaînes vides
+   - Années invalides (1900, 2050)
+   - Codes région/département inexistants
+
+4. **Documenter les tests**
+   - Docstring explicative
+   - Commentaires pour logique complexe
+   - Pattern AAA visible
+
+5. **Tests isolés**
+   - Pas de dépendances entre tests
+   - Fixtures pour setup/teardown
+   - Données de test en mémoire
+
+#### 📋 Conventions de Nommage
+
+- **Fichiers**: `test_<module>.py` (ex: `test_clean_data.py`)
+- **Fonctions**: `test_<fonction>_<comportement>` (ex: `test_clean_csv_removes_missing_values`)
+- **Fixtures**: Noms descriptifs sans préfixe test (ex: `sample_csv_data`, `temp_database`)
+
+#### 🎯 Pattern AAA (Arrange-Act-Assert)
+
+Tous les tests suivent cette structure:
+
+```python
+def test_exemple():
+    """Docstring expliquant le test."""
+    # ARRANGE - Préparation des données
+    input_data = {"value": 42}
+    expected = 84
+    
+    # ACT - Exécution de la fonction
+    result = fonction_a_tester(input_data)
+    
+    # ASSERT - Vérification du résultat
+    assert result == expected, f"Attendu {expected}, obtenu {result}"
+```
+
+#### ✅ Assertions avec Messages Explicites
+
+```python
+# ✅ Bon - message explicite
+assert value > 0, f"La valeur doit être positive, obtenu {value}"
+
+# ❌ Mauvais - pas de message
+assert value > 0
+```
+
+#### 🔖 Utilisation des Markers
+
+```python
+@pytest.mark.unit          # Test unitaire rapide
+@pytest.mark.integration   # Test d'intégration (nécessite DB)
+@pytest.mark.slow          # Test lent (> 1 seconde)
+```
+
+Exécution sélective:
+```bash
+pytest -m unit              # Uniquement tests unitaires
+pytest -m "not slow"        # Exclure tests lents
+pytest -m integration       # Tests d'intégration seulement
+```
+
+### Ressources
+
+- 📚 [Documentation pytest](https://docs.pytest.org/)
+- 📊 [pytest-cov](https://pytest-cov.readthedocs.io/)
+- 🐍 [Python Testing Best Practices](https://docs.python-guide.org/writing/tests/)
+- 📖 Documentation détaillée dans les en-têtes des fichiers de test (`tests/test_*.py`)
+
+---
+
 ## 📈 Rapport d'Analyse
 
 ### Vue d'Ensemble des Données

@@ -18,3 +18,15 @@ branca>=0.7,<1
 # === Requêtes HTTP ===
 requests>=2.31,<3
 
+# === Tests et Qualité de Code ===
+# Tests unitaires
+pytest>=7.4,<9
+# Couverture de code
+pytest-cov>=4.1,<6
+# Mock pour les tests
+pytest-mock>=3.12,<4
+# Tests asynchrones (si nécessaire)
+pytest-asyncio>=0.21,<1
+# Timeout pour les tests
+pytest-timeout>=2.2,<3
+

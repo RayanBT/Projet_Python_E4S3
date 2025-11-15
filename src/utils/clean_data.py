@@ -73,7 +73,7 @@ def clean_csv_data(
     try:
         cols_optional = ["patho_niv2", "patho_niv3"]
 
-        df = pd.read_csv(input_file, sep=";", dtype=str)
+        df = pd.read_csv(input_file, sep=";", dtype=str, encoding="utf-8")
         initial_rows = len(df)
 
         cols_required = [col for col in df.columns if col not in cols_optional]
@@ -84,7 +84,7 @@ def clean_csv_data(
             df = df.drop(columns=["libelle_classe_age"])
 
         output_file.parent.mkdir(parents=True, exist_ok=True)
-        df.to_csv(output_file, index=False, encoding="utf-8")
+        df.to_csv(output_file, index=False, sep=";", encoding="utf-8")
 
         count_kept = len(df)
         reporter(
