@@ -2,6 +2,18 @@
    STYLES SPÉCIFIQUES - PAGE ÉVOLUTION
    ======================================== */
 
+/* Couleurs de texte par défaut pour garantir le contraste */
+.page-container.evolution-page,
+.page-container.evolution-page p,
+.page-container.evolution-page li,
+.page-container.evolution-page label,
+.page-container.evolution-page .stat-title,
+.page-container.evolution-page .stat-details,
+.page-container.evolution-page .info-list,
+.page-container.evolution-page .period-display {
+    color: #1f2937;
+}
+
 /* Page title */
 .page-container .page-title {
     text-align: center;

@@ -124,7 +124,8 @@ body {
 
 /* === Navigation === */
 .app-nav {
-    max-width: 1400px;
+    width: min(100%, 1600px);
+    max-width: 1600px;
     margin: 0 auto 32px;
     padding: 22px 32px 22px 32px;
     background: white;

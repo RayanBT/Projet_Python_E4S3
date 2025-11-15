@@ -139,7 +139,7 @@ def layout() -> html.Div:
     """Construit le layout de la page évolution temporelle."""
     pathologies = get_liste_pathologies()
 
-    return html.Div(className="page-container", children=[
+    return html.Div(className="page-container evolution-page", children=[
         html.Div(className="mb-3", children=[
             html.H1(
                 "Évolution Temporelle des Pathologies",
