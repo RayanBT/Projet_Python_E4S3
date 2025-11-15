@@ -137,7 +137,11 @@ python main.py
 
 L'application sera accessible sur : **http://127.0.0.1:8050/**
 
-![Page d'accueil pendant l'installation](images/accueil_installation.png)
+**Aperçu de la page d'accueil au premier lancement** :
+
+![Page d'accueil pendant l'installation](src/images/accueil_installation.png)
+
+*L'interface affiche une barre de progression pendant le téléchargement et l'importation des données lors du premier démarrage.*
 
 ### 🛠️ Technologies Utilisées
 
@@ -823,7 +827,7 @@ L'analyse des données de l'Assurance Maladie (2015-2023) révèle plusieurs ten
 
 **Impact de la COVID-19** :
 
-![Évolution temporelle - Impact COVID-19](images/evolution_covid.png)
+![Évolution temporelle - Impact COVID-19](src/images/evolution_covid.png)
 
 **Observations clés** :
 - **Rupture majeure** : Pic massif de cas en 2021 lors des vagues épidémiques
@@ -841,7 +845,7 @@ L'analyse des données de l'Assurance Maladie (2015-2023) révèle plusieurs ten
 
 **Analyse des pathologies respiratoires chroniques** :
 
-![Distribution des pathologies respiratoires par âge](images/histo_respiratoire_age.png)
+![Distribution des pathologies respiratoires par âge](src/images/histo_respiratoire_age.png)
 
 **Profil bimodal observé** :
 - **Pic chez les jeunes enfants (0-10 ans)** : Forte prévalence liée aux infections respiratoires récurrentes, asthme infantile et développement du système immunitaire encore immature
@@ -864,7 +868,7 @@ L'analyse des données de l'Assurance Maladie (2015-2023) révèle plusieurs ten
 
 #### 3. Carte Choroplèthe - Disparités Géographiques du Diabète
 
-![Carte de prévalence du diabète par région](images/carte_diabete_prevalence.png)
+![Carte de prévalence du diabète par région](src/images/carte_diabete_prevalence.png)
 
 **Analyse géographique du diabète en France** :
 
