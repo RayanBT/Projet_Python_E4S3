@@ -17,79 +17,150 @@ def layout() -> html.Div:
     """Retourne le layout de la page camembert"""
     # Récupération des données pour les filtres
     annees = get_annees_disponibles()
-    regions = ['Toutes'] + get_liste_regions()
+    regions_codes = get_liste_regions()
     pathologies = ['Toutes'] + get_liste_pathologies()
+    
+    # Mapping des codes régions vers noms complets
+    region_names = {
+        "01": "Guadeloupe (01)",
+        "02": "Martinique (02)",
+        "03": "Guyane (03)",
+        "04": "La Réunion (04)",
+        "05": "Saint-Pierre-et-Miquelon (05)",
+        "06": "Mayotte (06)",
+        "11": "Île-de-France (11)",
+        "24": "Centre-Val de Loire (24)",
+        "27": "Bourgogne-Franche-Comté (27)",
+        "28": "Normandie (28)",
+        "32": "Hauts-de-France (32)",
+        "44": "Grand Est (44)",
+        "52": "Pays de la Loire (52)",
+        "53": "Bretagne (53)",
+        "75": "Nouvelle-Aquitaine (75)",
+        "76": "Occitanie (76)",
+        "84": "Auvergne-Rhône-Alpes (84)",
+        "93": "Provence-Alpes-Côte d'Azur (93)",
+        "94": "Corse (94)",
+    }
+    
+    # Options pour le dropdown avec noms complets
+    regions_options = [{'label': 'Toutes', 'value': 'Toutes'}]
+    regions_options += [{'label': region_names.get(code, code), 'value': code} for code in regions_codes]
     
     # Layout de la page
     return html.Div([
-    html.Div([
-        html.H1("Répartition de la Gravité des Pathologies", className="page-title"),
-        html.P(
-            "Distribution des pathologies selon leur niveau de priorité (gravité)",
-            className="page-subtitle"
+    # En-tête
+    html.Div(className="mb-3", children=[
+        html.H1(
+            "Répartition de la Gravité des Pathologies",
+            className="page-title text-center"
         ),
-    ], className="page-header"),
+        html.P(
+            (
+                "Analysez la répartition de la gravité pour différentes pathologies. "
+                "Comparez les différentes pathologies et observez les tendances."
+            ),
+            className="text-center text-muted"
+        ),
+    ]),
     
-    # Filtres
-    html.Div([
-        html.Div([
-            html.Label("Année :", className="filter-label"),
-            dcc.Dropdown(
-                id='camembert-annee-dropdown',
-                options=[{'label': str(annee), 'value': annee} for annee in annees],
-                value=annees[0] if annees else 2023,
-                clearable=False,
-                className="filter-dropdown"
-            ),
-        ], className="filter-item"),
-        
-        html.Div([
-            html.Label("Région :", className="filter-label"),
-            dcc.Dropdown(
-                id='camembert-region-dropdown',
-                options=[{'label': region, 'value': region} for region in regions],
-                value='Toutes',
-                clearable=False,
-                className="filter-dropdown"
-            ),
-        ], className="filter-item"),
-        
-        html.Div([
-            html.Label("Pathologie :", className="filter-label"),
-            dcc.Dropdown(
-                id='camembert-pathologie-dropdown',
-                options=[{'label': patho, 'value': patho} for patho in pathologies],
-                value='Toutes',
-                clearable=False,
-                className="filter-dropdown"
-            ),
-        ], className="filter-item"),
-    ], className="filters-container"),
+    # Panneau de filtres
+    html.Div(className="card", children=[
+        html.Div(className="flex-controls", children=[
+            # Sélection de la période
+            html.Div(className="filter-section period-filter", children=[
+                html.Label("Période d'analyse", className="form-label"),
+                html.Div(className="filter-content", children=[
+                    dcc.RangeSlider(
+                        id='camembert-periode-slider',
+                        min=2015,
+                        max=2023,
+                        value=[2015, 2023],
+                        marks={
+                            2015: '2015',
+                            2017: '2017',
+                            2019: '2019',
+                            2021: '2021',
+                            2023: '2023'
+                        },
+                        step=1,
+                        className="period-slider",
+                        tooltip={"placement": "bottom", "always_visible": True}
+                    ),
+                    html.Div(
+                        id='camembert-periode-display',
+                        className="period-display"
+                    )
+                ])
+            ]),
+            
+            # Sélection de la région
+            html.Div(className="filter-section", children=[
+                html.Label("Région", className="form-label"),
+                html.Div(className="filter-content", children=[
+                    dcc.Dropdown(
+                        id='camembert-region-dropdown',
+                        options=regions_options,
+                        value='Toutes',
+                        clearable=False,
+                        className="filter-dropdown"
+                    ),
+                ])
+            ]),
+            
+            # Sélection de la pathologie
+            html.Div(className="filter-section", children=[
+                html.Label("Pathologie", className="form-label"),
+                html.Div(className="filter-content", children=[
+                    dcc.Dropdown(
+                        id='camembert-pathologie-dropdown',
+                        options=[{'label': patho, 'value': patho} for patho in pathologies],
+                        value='Toutes',
+                        clearable=False,
+                        className="filter-dropdown"
+                    ),
+                ])
+            ]),
+        ])
+    ]),
     
     # Graphique principal
-    html.Div([
-        dcc.Graph(id='camembert-graph', className="graph-container")
-    ], className="content-container"),
+    html.Div(className="card mt-2", children=[
+        dcc.Graph(
+            id='camembert-graph',
+            config={
+                'displayModeBar': True,
+                'displaylogo': False,
+                'modeBarButtonsToRemove': ['pan2d', 'lasso2d', 'select2d']
+            }
+        )
+    ]),
     
     # Statistiques complémentaires
-    html.Div(id='camembert-stats', className="stats-container"),
+    html.Div(className="card mt-2", children=[
+        html.Div(id='camembert-stats')
+    ]),
     
     ], className="page-container")
 
 
 @callback(
     [Output('camembert-graph', 'figure'),
-     Output('camembert-stats', 'children')],
-    [Input('camembert-annee-dropdown', 'value'),
+     Output('camembert-stats', 'children'),
+     Output('camembert-periode-display', 'children')],
+    [Input('camembert-periode-slider', 'value'),
      Input('camembert-region-dropdown', 'value'),
      Input('camembert-pathologie-dropdown', 'value')]
 )
-def update_camembert(annee, region, pathologie):
+def update_camembert(periode, region, pathologie):
     """
     Met à jour le diagramme en camembert et les statistiques
     """
+    debut_annee, fin_annee = periode
+    periode_text = f"De {debut_annee} à {fin_annee}"
+    
     # Récupération des données
-    df = get_repartition_gravite(annee, region, pathologie)
+    df = get_repartition_gravite(debut_annee, fin_annee, region, pathologie)
     
     if df.empty:
         # Graphique vide si pas de données
@@ -105,7 +176,7 @@ def update_camembert(annee, region, pathologie):
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)'
         )
-        return fig, html.Div("Aucune donnée disponible")
+        return fig, html.Div("Aucune donnée disponible"), periode_text
     
     # Préparation des données pour le graphique
     labels = []
@@ -143,17 +214,16 @@ def update_camembert(annee, region, pathologie):
         labels=labels,
         values=values,
         marker=dict(colors=colors, line=dict(color='white', width=2)),
-        textinfo='label+percent',
+        textinfo='percent',
         textposition='auto',
         hovertemplate='<b>%{label}</b><br>' +
                       'Nombre de cas: %{value:,.0f}<br>' +
                       'Pourcentage: %{percent}<br>' +
-                      '<extra></extra>',
-        pull=[0.05 if i == 0 else 0 for i in range(len(labels))],  # Détacher la première tranche
+                      '<extra></extra>'
     )])
     
     # Mise en forme du graphique
-    title_text = f"Répartition par Niveau de Gravité - {annee}"
+    title_text = f"Répartition par Niveau de Gravité ({debut_annee}-{fin_annee})"
     if region != 'Toutes':
         title_text += f" - {region}"
     if pathologie != 'Toutes':
@@ -212,4 +282,4 @@ def update_camembert(annee, region, pathologie):
         ])
     ]
     
-    return fig, stats_children
+    return fig, stats_children, periode_text

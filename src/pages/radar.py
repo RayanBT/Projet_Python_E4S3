@@ -4,6 +4,7 @@ from typing import Any
 
 from dash import Input, Output, callback, dcc, html
 import plotly.graph_objects as go
+import pandas as pd
 
 from src.components.icons import icon_pin
 from src.utils.db_queries import (
@@ -38,7 +39,8 @@ NO_NIV3_PATHOLOGIES = [
 
 def create_radar_figure(
     dimension: str = "pathologies",
-    annee: int = 2023,
+    debut_annee: int = 2015,
+    fin_annee: int = 2023,
     selection: str | list[str] | None = None,
     region: str | None = None
 ) -> go.Figure:
@@ -46,20 +48,27 @@ def create_radar_figure(
 
     if dimension == "pathologies":
         if isinstance(selection, str) and selection:
-            df2 = get_repartition_patho_niv2(annee, selection)
+            df2 = get_repartition_patho_niv2(debut_annee, fin_annee, selection)
             df2 = df2.sort_values("total_cas", ascending=False)
             categories = df2["patho_niv2"].fillna("Inconnue").tolist()
             values = df2["total_cas"].tolist()
-            title = f"Répartition des sous-pathologies de '{selection}' en {annee}"
+            title = f"Répartition des sous-pathologies de '{selection}' ({debut_annee}-{fin_annee})"
         else:
-            df = get_evolution_pathologies(annee, annee, None, region)
-            df = df[df["patho_niv1"].isin(ALLOWED_PATHOLOGIES)]
+            df = get_evolution_pathologies(debut_annee, fin_annee, None, region)
+            df = df.groupby("patho_niv1")["total_cas"].sum().reset_index()
+            df = df.sort_values("total_cas", ascending=False)
             categories = df["patho_niv1"].tolist()
             values = df["total_cas"].tolist()
-            title = f"Répartition des pathologies en {annee}"
+            title = f"Répartition des pathologies ({debut_annee}-{fin_annee})"
 
     elif dimension == "regions":
-        df = get_pathologies_par_region(annee)
+        # Agrégation sur la période
+        dfs = []
+        for annee in range(debut_annee, fin_annee + 1):
+            df_year = get_pathologies_par_region(annee)
+            dfs.append(df_year)
+        df = pd.concat(dfs, ignore_index=True)
+        df = df.groupby("region")["total_cas"].sum().reset_index()
         df = df[df["region"].str.len() == 2]
         if selection:
             df = df[df["region"].isin(selection)]
@@ -83,7 +92,7 @@ def create_radar_figure(
         df = df.sort_values("total_cas", ascending=False)
         categories = df["region_name"].tolist()
         values = df["total_cas"].tolist()
-        title = f"Répartition par région en {annee}"
+        title = f"Répartition par région ({debut_annee}-{fin_annee})"
 
     else:
         categories, values, title = [], [], "Aucune donnée"
@@ -107,7 +116,7 @@ def create_radar_figure(
             r=values,
             theta=categories,
             fill="toself",
-            name=str(annee),
+            name=f"{debut_annee}-{fin_annee}",
             marker={"color": 'rgba(31,119,180,0.8)'}
         )
     )
@@ -129,14 +138,15 @@ def create_radar_figure(
 
 
 def create_radar_figure_niv3(
-    annee: int = 2023,
+    debut_annee: int = 2015,
+    fin_annee: int = 2023,
     selection: str | None = None
 ) -> go.Figure:
     """Crée un second graphique radar montrant la répartition des patho_niv3."""
     if not selection or not isinstance(selection, str):
         return go.Figure()
 
-    df3 = get_repartition_patho_niv3(annee, selection)
+    df3 = get_repartition_patho_niv3(debut_annee, fin_annee, selection)
     if df3.empty:
         fig = go.Figure()
         fig.add_annotation(
@@ -173,7 +183,7 @@ def create_radar_figure_niv3(
             },
         },
         showlegend=True,
-        title={"text": f"Répartition des patho_niv3 de '{selection}' en {annee}", "x": 0.5},
+        title={"text": f"Répartition des patho_niv3 de '{selection}' ({debut_annee}-{fin_annee})", "x": 0.5},
         height=700,
         margin={"t": 80, "b": 60, "l": 80, "r": 80},
     )
@@ -223,25 +233,31 @@ def layout() -> html.Div:
                                 ],
                             ),
                             html.Div(
-                                className="filter-section",
+                                className="filter-section period-filter",
                                 children=[
-                                    html.Label("Année"),
-                                    dcc.Slider(
-                                        id="radar-annee-slider",
-                                        min=2015,
-                                        max=2023,
-                                        value=2023,
-                                        marks={
-                                            2015: '2015',
-                                            2017: '2017',
-                                            2019: '2019',
-                                            2021: '2021',
-                                            2023: '2023'
-                                        },
-                                        step=1,
-                                        tooltip={"placement": "bottom", "always_visible": True},
-                                    ),
-                                    html.Div(id="radar-annee-display"),
+                                    html.Label("Période d'analyse", className="form-label"),
+                                    html.Div(className="filter-content", children=[
+                                        dcc.RangeSlider(
+                                            id="radar-periode-slider",
+                                            min=2015,
+                                            max=2023,
+                                            value=[2015, 2023],
+                                            marks={
+                                                2015: '2015',
+                                                2017: '2017',
+                                                2019: '2019',
+                                                2021: '2021',
+                                                2023: '2023'
+                                            },
+                                            step=1,
+                                            className="period-slider",
+                                            tooltip={"placement": "bottom", "always_visible": True}
+                                        ),
+                                        html.Div(
+                                            id="radar-periode-display",
+                                            className="period-display"
+                                        )
+                                    ])
                                 ],
                             ),
                             html.Div(
@@ -347,37 +363,38 @@ def update_elements_options(
     [
         Output("radar-graph", "figure"),
         Output("radar-warning", "children"),
-        Output("radar-annee-display", "children"),
-        Output("radar-annee-slider", "style"),
+        Output("radar-periode-display", "children"),
+        Output("radar-periode-slider", "style"),
         Output("radar-graph-niv3", "figure"),
         Output("radar-graph-niv3", "style"),
     ],
     [
         Input("radar-dimension-dropdown", "value"),
-        Input("radar-annee-slider", "value"),
+        Input("radar-periode-slider", "value"),
         Input("radar-elements-dropdown", "value"),
         Input("radar-patho-niv1-dropdown", "value"),
     ],
 )
 def update_radar(
     dimension: str,
-    annee: int,
+    periode: list[int],
     selection: list[str],
     patho_niv1_selected: str | None
 ) -> tuple[go.Figure, str, str, dict[str, Any], go.Figure, dict[str, str]]:
     """Met à jour le graphique radar."""
+    debut_annee, fin_annee = periode
     warning = ""
-    annee_text = f"Année sélectionnée : {annee}"
+    periode_text = f"De {debut_annee} à {fin_annee}"
     slider_style: dict[str, Any] = {}
 
     sel = patho_niv1_selected if patho_niv1_selected else selection
-    figure = create_radar_figure(dimension, annee, sel)
+    figure = create_radar_figure(dimension, debut_annee, fin_annee, sel)
 
     if isinstance(sel, str) and sel and sel not in NO_NIV3_PATHOLOGIES:
-        fig_niv3 = create_radar_figure_niv3(annee, sel)
+        fig_niv3 = create_radar_figure_niv3(debut_annee, fin_annee, sel)
         style_niv3: dict[str, str] = {"width": "100%", "display": "block", "marginTop": "20px"}
     else:
         fig_niv3 = go.Figure()
         style_niv3 = {"display": "none"}
 
-    return figure, warning, annee_text, slider_style, fig_niv3, style_niv3
+    return figure, warning, periode_text, slider_style, fig_niv3, style_niv3

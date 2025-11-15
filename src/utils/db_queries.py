@@ -167,8 +167,8 @@ def get_liste_pathologies() -> list[str]:
     return pd.read_sql_query(query, engine)["patho_niv1"].tolist()
 
 
-def get_repartition_patho_niv2(annee: int = 2023, pathologie: Optional[str] = None) -> pd.DataFrame:
-    """Retourne la répartition des sous-pathologies (patho_niv2) pour une patho_niv1 donnée et une année.
+def get_repartition_patho_niv2(debut_annee: int = 2015, fin_annee: int = 2023, pathologie: Optional[str] = None) -> pd.DataFrame:
+    """Retourne la répartition des sous-pathologies (patho_niv2) pour une patho_niv1 donnée sur une période.
 
     Si pathologie est None, retourne une table vide.
     """
@@ -182,7 +182,7 @@ def get_repartition_patho_niv2(annee: int = 2023, pathologie: Optional[str] = No
             patho_niv2,
             SUM(Ntop) AS total_cas
         FROM effectifs
-        WHERE annee = :annee
+        WHERE annee BETWEEN :debut_annee AND :fin_annee
           AND (:patho IS NULL OR patho_niv1 = :patho)
         GROUP BY patho_niv2
         ORDER BY total_cas DESC
@@ -191,7 +191,7 @@ def get_repartition_patho_niv2(annee: int = 2023, pathologie: Optional[str] = No
     return pd.read_sql_query(
         query,
         engine,
-        params={"annee": annee, "patho": pathologie},
+        params={"debut_annee": debut_annee, "fin_annee": fin_annee, "patho": pathologie},
     )
 
 
@@ -210,8 +210,8 @@ def get_pathologies_with_niv2() -> List[str]:
     return pd.read_sql_query(query, engine)["patho_niv1"].tolist()
 
 
-def get_repartition_patho_niv3(annee: int = 2023, pathologie: Optional[str] = None) -> pd.DataFrame:
-    """Retourne la répartition des sous-pathologies (patho_niv3) pour une patho_niv1 donnée et une année.
+def get_repartition_patho_niv3(debut_annee: int = 2015, fin_annee: int = 2023, pathologie: Optional[str] = None) -> pd.DataFrame:
+    """Retourne la répartition des sous-pathologies (patho_niv3) pour une patho_niv1 donnée sur une période.
 
     Si pathologie est None, retourne une table vide.
     """
@@ -225,7 +225,7 @@ def get_repartition_patho_niv3(annee: int = 2023, pathologie: Optional[str] = No
             patho_niv3,
             SUM(Ntop) AS total_cas
         FROM effectifs
-        WHERE annee = :annee
+        WHERE annee BETWEEN :debut_annee AND :fin_annee
           AND (:patho IS NULL OR patho_niv1 = :patho)
         GROUP BY patho_niv3
         ORDER BY total_cas DESC
@@ -234,7 +234,7 @@ def get_repartition_patho_niv3(annee: int = 2023, pathologie: Optional[str] = No
     return pd.read_sql_query(
         query,
         engine,
-        params={"annee": annee, "patho": pathologie},
+        params={"debut_annee": debut_annee, "fin_annee": fin_annee, "patho": pathologie},
     )
 
 
@@ -399,8 +399,10 @@ def get_annees_disponibles() -> list[int]:
     return pd.read_sql_query(query, engine)["annee"].tolist()
 
 
+
 def get_repartition_gravite(
-    annee: int = 2023,
+    debut_annee: int = 2015,
+    fin_annee: int = 2023,
     region: Optional[str] = None,
     pathologie: Optional[str] = None
 ) -> pd.DataFrame:
@@ -408,7 +410,8 @@ def get_repartition_gravite(
     Retourne la répartition par niveau de gravité (Niveau prioritaire).
     
     Args:
-        annee: Année pour le filtre
+        debut_annee: Année de début pour le filtre
+        fin_annee: Année de fin pour le filtre
         region: Code région optionnel (None = toutes régions)
         pathologie: Pathologie niveau 1 optionnelle (None = toutes pathologies)
     
@@ -419,12 +422,12 @@ def get_repartition_gravite(
     
     # Construction de la requête
     conditions = [
-        "annee = :annee",
+        "annee BETWEEN :debut_annee AND :fin_annee",
         "cla_age_5 = 'tsage'",
         "\"Niveau prioritaire\" IS NOT NULL"
     ]
     
-    params = {"annee": annee}
+    params = {"debut_annee": debut_annee, "fin_annee": fin_annee}
     
     if region and region != 'Toutes':
         conditions.append("region = :region")
