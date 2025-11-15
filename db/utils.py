@@ -3,14 +3,10 @@
 import csv
 import sqlite3
 from pathlib import Path
-from typing import Any, Callable, Final, Optional, cast
-
-from pydantic import ValidationError
-
-import config
+from typing import Callable, Final, Optional
 
 # Constantes
-CHUNK_SIZE: Final[int] = config.DB_CHUNK_SIZE
+CHUNK_SIZE: Final[int] = 20_000
 DEFAULT_DELIMITER = ";"
 FALLBACK_DELIMITER = ","
 
@@ -83,7 +79,7 @@ def bootstrap_db_from_csv(
 
 
 def import_csv_to_sqlite(csv_path: Path, db_path: Path, table_name: str) -> int:
-    """Insere le contenu d'un CSV dans une table SQLite avec validation Pydantic.
+    """Insere le contenu d'un CSV dans une table SQLite.
 
     Args:
         csv_path: Chemin du fichier CSV a parcourir.
@@ -93,15 +89,7 @@ def import_csv_to_sqlite(csv_path: Path, db_path: Path, table_name: str) -> int:
     Returns:
         Nombre total de lignes inserees dans la table.
     """
-    # Import local pour éviter la circularité
-    from db.schema import EffectifCreate
-    
     db_path.parent.mkdir(parents=True, exist_ok=True)
-
-    # Compteurs pour le reporting
-    total_inserted = 0
-    total_skipped = 0
-    validation_errors: list[dict[str, object]] = []
 
     with sqlite3.connect(db_path) as conn:
         # 1) S'assurer que la table existe
@@ -124,62 +112,23 @@ def import_csv_to_sqlite(csv_path: Path, db_path: Path, table_name: str) -> int:
             file.seek(0)
             reader = csv.DictReader(file, delimiter=delim)
 
-            # 4) Insertion par lots avec validation Pydantic
-            batch = []
-            row_number = 1  # Commence à 1 car header est ligne 0
-            
+            # 4) Insertion par lots
+            batch, total = [], 0
             for row in reader:
-                row_number += 1
-                try:
-                    # Validation Pydantic de la ligne
-                    validated_data = EffectifCreate(**cast(dict[str, Any], row))
-                    
-                    # Conversion en dictionnaire et extraction des valeurs dans l'ordre
-                    data_dict = validated_data.model_dump(exclude={'id'}, by_alias=False)
-                    batch.append([data_dict.get(col) for col in cols])
-                    
-                    # Insertion par lots
-                    if len(batch) >= CHUNK_SIZE:
-                        conn.executemany(insert_sql, batch)
-                        conn.commit()
-                        total_inserted += len(batch)
-                        batch.clear()
-                        
-                except ValidationError as e:
-                    total_skipped += 1
-                    # Garder seulement les 10 premières erreurs pour ne pas surcharger
-                    if len(validation_errors) < 10:
-                        validation_errors.append({
-                            'ligne': row_number,
-                            'erreurs': str(e.error_count()) + ' erreur(s)',
-                            'premier_champ': e.errors()[0]['loc'][0] if e.errors() else 'inconnu'
-                        })
-                except Exception as e:
-                    total_skipped += 1
-                    if len(validation_errors) < 10:
-                        validation_errors.append({
-                            'ligne': row_number,
-                            'erreurs': f'Erreur inattendue: {type(e).__name__}',
-                            'premier_champ': 'N/A'
-                        })
+                batch.append([row.get(col) for col in cols])
+                if len(batch) >= CHUNK_SIZE:
+                    conn.executemany(insert_sql, batch)
+                    conn.commit()
+                    total += len(batch)
+                    batch.clear()
 
             # Inserer le dernier lot
             if batch:
                 conn.executemany(insert_sql, batch)
                 conn.commit()
-                total_inserted += len(batch)
+                total += len(batch)
 
-        # Afficher un rapport de validation
-        if validation_errors:
-            print(f"\n⚠️  Validation Pydantic : {total_skipped} ligne(s) rejetée(s)")
-            print("Exemples d'erreurs (10 premières) :")
-            for err in validation_errors:
-                print(f"  - Ligne {err['ligne']}: {err['erreurs']} (champ: {err['premier_champ']})")
-        
-        if total_inserted > 0:
-            print(f"✅ Validation Pydantic : {total_inserted} ligne(s) validée(s) et insérée(s)")
-
-        return total_inserted
+        return total
 
 
 def count_rows_raw(db_path: Path, table_name: str) -> int:

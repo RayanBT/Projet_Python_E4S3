@@ -27,20 +27,27 @@ from src.utils.clean_data import (
     clean_pathologie_labels
 )
 
-# Import de la configuration centralisée
-import config
-
 # Type pour les fonctions de rapport/log
 Reporter = Callable[[str], None]
 
-# Utilisation des chemins depuis config.py
-DATA_DIR: Final[Path] = config.DATA_DIR
-CSV_URL: Final[str] = config.CSV_URL
-DEPT_REGION_URL: Final[str] = config.DEPT_REGION_URL
-CSV_DEST: Final[Path] = config.CSV_RAW_PATH
-DEPT_REGION_DEST: Final[Path] = config.DEPT_REGION_JSON_PATH
-DB_PATH: Final[Path] = config.DB_PATH
-TABLE_NAME: Final[str] = config.DB_TABLE_NAME
+# URLs et chemins de fichiers (à déplacer dans config.py ?)
+ROOT: Final[Path] = Path(__file__).resolve().parent.parent.parent
+DATA_DIR: Final[Path] = ROOT / "data"
+
+CSV_URL: Final[str] = (
+    "https://data.ameli.fr/api/explore/v2.1/catalog/datasets/effectifs/"
+    "exports/csv?use_labels=true"
+)
+DEPT_REGION_URL: Final[str] = (
+    "https://static.data.gouv.fr/resources/"
+    "departements-et-leurs-regions/"
+    "20190815-175403/departements-region.json"
+)
+
+CSV_DEST: Final[Path] = DATA_DIR / "raw/effectifs.csv"
+DEPT_REGION_DEST: Final[Path] = DATA_DIR / "geolocalisation/departements-regions.json"
+DB_PATH: Final[Path] = DATA_DIR / "effectifs.sqlite3"
+TABLE_NAME: Final[str] = "effectifs"
 
 
 def ensure_departements_regions_json(report: Reporter | None = None) -> Path:
@@ -110,7 +117,7 @@ def ensure_effectifs_csv(report: Reporter | None = None) -> tuple[Path, Path]:
             reporter(f"[ERREUR] Telechargement echoue : {exc}")
             raise
 
-    cleaned_csv = config.CSV_CLEAN_PATH
+    cleaned_csv = DATA_DIR / "clean/csv_clean.csv"
     try:
         reporter("[INFO] Nettoyage des donnees en cours...")
         cleaned_csv = clean_csv_data(CSV_DEST, cleaned_csv, report=reporter)
@@ -123,7 +130,7 @@ def ensure_effectifs_csv(report: Reporter | None = None) -> tuple[Path, Path]:
 
 
 def summarise_database(report: Reporter) -> None:
-    """Affiche quelques statistiques sur la base chargee et valide avec Pydantic.
+    """Affiche quelques statistiques sur la base chargee.
 
     Args:
         report (Reporter): Fonction de log recevant les messages d'avancement.
@@ -141,40 +148,13 @@ def summarise_database(report: Reporter) -> None:
         report(f"[ORM] {TABLE_NAME} -> {total_orm} lignes")
 
         try:
-            from pydantic import ValidationError
             _, EffectifOut = as_pydantic_models()
-            
-            # Valider un échantillon plus large pour vérifier l'intégrité
-            sample_size = min(100, total_orm)
-            rows = session.query(Effectif).limit(sample_size).all()
-            
-            valid_count = 0
-            invalid_count = 0
-            errors_sample: list[str] = []
-            
+            rows = session.query(Effectif).limit(3).all()
             for idx, row in enumerate(rows, start=1):
-                try:
-                    model = EffectifOut.model_validate(row)
-                    valid_count += 1
-                    # Afficher seulement les 3 premiers exemples
-                    if idx <= 3:
-                        report(f"[ORM/Pydantic] exemple {idx}: {model.model_dump()}")
-                except ValidationError as e:
-                    invalid_count += 1
-                    if len(errors_sample) < 3:
-                        errors_sample.append(f"Ligne {idx}: {e.error_count()} erreur(s)")
-            
-            # Rapport de validation
-            report(f"[Pydantic Validation] {valid_count}/{sample_size} lignes valides")
-            if invalid_count > 0:
-                report(f"[Pydantic WARNING] {invalid_count} ligne(s) invalide(s) détectée(s):")
-                for err in errors_sample:
-                    report(f"  - {err}")
-            else:
-                report("[Pydantic OK] ✅ Toutes les lignes testées sont valides")
-                
+                model = EffectifOut.model_validate(row)
+                report(f"[ORM/Pydantic] exemple {idx}: {model.model_dump()}")
         except Exception as exc:
-            report(f"[WARNING] Validation Pydantic échouée ({exc.__class__.__name__}: {exc})")
+            report(f"[INFO] Pydantic ignore ({exc.__class__.__name__}: {exc})")
 
 
 def verify_and_clean_pathologies(report: Reporter) -> None:
