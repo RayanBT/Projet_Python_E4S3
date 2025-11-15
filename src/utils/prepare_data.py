@@ -130,7 +130,7 @@ def ensure_effectifs_csv(report: Reporter | None = None) -> tuple[Path, Path]:
 
 
 def summarise_database(report: Reporter) -> None:
-    """Affiche quelques statistiques sur la base chargee.
+    """Affiche quelques statistiques sur la base chargee et valide avec Pydantic.
 
     Args:
         report (Reporter): Fonction de log recevant les messages d'avancement.
@@ -148,13 +148,40 @@ def summarise_database(report: Reporter) -> None:
         report(f"[ORM] {TABLE_NAME} -> {total_orm} lignes")
 
         try:
+            from pydantic import ValidationError
             _, EffectifOut = as_pydantic_models()
-            rows = session.query(Effectif).limit(3).all()
+            
+            # Valider un échantillon plus large pour vérifier l'intégrité
+            sample_size = min(100, total_orm)
+            rows = session.query(Effectif).limit(sample_size).all()
+            
+            valid_count = 0
+            invalid_count = 0
+            errors_sample = []
+            
             for idx, row in enumerate(rows, start=1):
-                model = EffectifOut.model_validate(row)
-                report(f"[ORM/Pydantic] exemple {idx}: {model.model_dump()}")
+                try:
+                    model = EffectifOut.model_validate(row)
+                    valid_count += 1
+                    # Afficher seulement les 3 premiers exemples
+                    if idx <= 3:
+                        report(f"[ORM/Pydantic] exemple {idx}: {model.model_dump()}")
+                except ValidationError as e:
+                    invalid_count += 1
+                    if len(errors_sample) < 3:
+                        errors_sample.append(f"Ligne {idx}: {e.error_count()} erreur(s)")
+            
+            # Rapport de validation
+            report(f"[Pydantic Validation] {valid_count}/{sample_size} lignes valides")
+            if invalid_count > 0:
+                report(f"[Pydantic WARNING] {invalid_count} ligne(s) invalide(s) détectée(s):")
+                for err in errors_sample:
+                    report(f"  - {err}")
+            else:
+                report("[Pydantic OK] ✅ Toutes les lignes testées sont valides")
+                
         except Exception as exc:
-            report(f"[INFO] Pydantic ignore ({exc.__class__.__name__}: {exc})")
+            report(f"[WARNING] Validation Pydantic échouée ({exc.__class__.__name__}: {exc})")
 
 
 def verify_and_clean_pathologies(report: Reporter) -> None:
