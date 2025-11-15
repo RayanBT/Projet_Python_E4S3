@@ -37,6 +37,24 @@ def _format_rate(value: float) -> str:
     return f"{float(value):.2f} %"
 
 
+def _normalize_period_value(
+    value: int | list[int] | tuple[int, int] | None,
+) -> tuple[int, int]:
+    """Normalise la valeur du slider (année ou plage)."""
+    if value is None:
+        return 2015, 2015
+    if isinstance(value, (list, tuple)):
+        if not value:
+            return 2015, 2015
+        start = int(value[0])
+        end = int(value[1]) if len(value) > 1 else start
+    else:
+        start = end = int(value)
+    if start > end:
+        start, end = end, start
+    return start, end
+
+
 @lru_cache(maxsize=2)
 def _load_geojson_by_level(level: str) -> dict[str, Any] | None:
     """
@@ -80,7 +98,8 @@ def _load_geojson_by_level(level: str) -> dict[str, Any] | None:
 
 
 def create_choropleth_html(
-    annee: int,
+    debut_annee: int,
+    fin_annee: int,
     pathologie: str | None,
     niveau_geo: str = "region",
     indicateur: str = "prevalence",
@@ -90,7 +109,8 @@ def create_choropleth_html(
     """Crée une carte choroplèthe Folium et retourne le HTML + DataFrame.
 
     Args:
-        annee: Année des données
+        debut_annee: Année de début de la période sélectionnée
+        fin_annee: Année de fin de la période sélectionnée
         pathologie: Pathologie à filtrer (None = toutes)
         niveau_geo: "region" ou "departement"
         indicateur: "prevalence" ou "total_cas"
@@ -98,15 +118,21 @@ def create_choropleth_html(
         outremer_selected: Nom de la région d'outre-mer si spécifique
     """
 
+    start_year = min(debut_annee, fin_annee)
+    end_year = max(debut_annee, fin_annee)
+    periode_label = (
+        f"{start_year}" if start_year == end_year else f"{start_year}-{end_year}"
+    )
+
     try:
         try:
             if niveau_geo == "region":
-                df = get_pathologies_par_region(annee, pathologie)
+                df = get_pathologies_par_region(start_year, pathologie, fin_annee=end_year)
                 geo_column = "region"
                 geo_key = "code"
                 label_field = "nom"
             else:
-                df = get_pathologies_par_departement(annee, pathologie)
+                df = get_pathologies_par_departement(start_year, pathologie, fin_annee=end_year)
                 geo_column = "dept"
                 geo_key = "code"
                 label_field = "nom"
@@ -137,8 +163,8 @@ def create_choropleth_html(
                     "border-radius: 10px; margin: 20px;'>"
                     "<h2 style='color: #d68910;'>⚠️ Aucune donnée disponible</h2>"
                     "<p style='font-size: 16px;'>"
-                    "Il n'y a pas de données pour l'année et la pathologie "
-                    "sélectionnées.</p>"
+                    f"Il n'y a pas de données pour la période {periode_label} et "
+                    "la pathologie sélectionnées.</p>"
                     "<p style='font-size: 14px; margin-top: 10px;'>"
                     "Essayez de changer les filtres ci-dessus.</p>"
                     "</div>"
@@ -505,7 +531,7 @@ def create_choropleth_html(
             import time
 
             unique_id = hashlib.md5(
-                f"{niveau_geo}-{annee}-{pathologie}-{indicateur}-{time.time()}"
+                f"{niveau_geo}-{start_year}-{end_year}-{pathologie}-{indicateur}-{time.time()}"
                 .encode()
             ).hexdigest()[:8]
             html_output = html_output.replace(
@@ -710,12 +736,12 @@ def layout() -> html.Div:
                             ]),
 
                             html.Div([
-                                html.Label("Année", className="form-label"),
-                                dcc.Slider(
+                                html.Label("Période", className="form-label"),
+                                dcc.RangeSlider(
                                     id="carte-annee-slider",
                                     min=2015,
                                     max=2023,
-                                    value=2023,
+                                    value=[2015, 2023],
                                     marks={
                                         2015: '2015',
                                         2017: '2017',
@@ -724,7 +750,13 @@ def layout() -> html.Div:
                                         2023: '2023'
                                     },
                                     step=1,
+                                    allowCross=False,
                                     tooltip={"placement": "bottom", "always_visible": True},
+                                ),
+                                html.Div(
+                                    id="carte-periode-display",
+                                    className="period-display",
+                                    style={"marginTop": "8px"},
                                 ),
                             ]),
 
@@ -865,6 +897,18 @@ def _update_zone_main_button(zone_store: dict[str, str | None]) -> list[html.Spa
 
 
 @callback(
+    Output("carte-periode-display", "children"),
+    Input("carte-annee-slider", "value"),
+)
+def _update_carte_periode_display(annees: list[int] | int | None) -> str:
+    """Affiche la plage sélectionnée sous le slider."""
+    start, end = _normalize_period_value(annees)
+    if start == end:
+        return f"Année sélectionnée : {start}"
+    return f"Période : {start} à {end}"
+
+
+@callback(
     Output("carte-choropleth", "srcDoc"),
     Output("carte-stats", "children"),
     Input("carte-niveau-geo-dropdown", "value"),
@@ -873,15 +917,35 @@ def _update_zone_main_button(zone_store: dict[str, str | None]) -> list[html.Spa
     Input("carte-indicateur-dropdown", "value"),
     Input("carte-zone-store", "data"),
 )
-def update_carte(niveau_geo: str, annee: int, pathologie_value: str, indicateur: str, zone_store: dict[str, str | None]) -> tuple[str, html.P | html.Div]:
+def update_carte(
+    niveau_geo: str,
+    annees: list[int] | int,
+    pathologie_value: str,
+    indicateur: str,
+    zone_store: dict[str, str | None],
+) -> tuple[str, html.P | html.Div]:
     """Callback pour mettre à jour la carte et les statistiques."""
     zone_scope_raw = zone_store.get("scope") if isinstance(zone_store, dict) else "france"
     zone_scope = str(zone_scope_raw) if zone_scope_raw else "france"
     outremer_selected = zone_store.get("selected") if isinstance(zone_store, dict) else None
-    print(f"🔄 CALLBACK APPELÉ : niveau={niveau_geo}, annee={annee}, pathologie={pathologie_value}, indicateur={indicateur}, zone_scope={zone_scope}, outremer_selected={outremer_selected}")
+    start_year, end_year = _normalize_period_value(annees)
+    print(
+        "🔄 CALLBACK APPELÉ : "
+        f"niveau={niveau_geo}, periode={start_year}-{end_year}, "
+        f"pathologie={pathologie_value}, indicateur={indicateur}, "
+        f"zone_scope={zone_scope}, outremer_selected={outremer_selected}"
+    )
 
     pathologie = None if pathologie_value in (None, "ALL") else pathologie_value
-    map_html, df = create_choropleth_html(annee, pathologie, niveau_geo, indicateur, zone_scope=zone_scope, outremer_selected=outremer_selected)
+    map_html, df = create_choropleth_html(
+        start_year,
+        end_year,
+        pathologie,
+        niveau_geo,
+        indicateur,
+        zone_scope=zone_scope,
+        outremer_selected=outremer_selected,
+    )
     stats_content = _build_stats_content(df, niveau_geo, indicateur)
 
     print(f"✅ CALLBACK TERMINÉ : {len(df)} zones, HTML={len(map_html)} caractères")

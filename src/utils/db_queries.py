@@ -23,13 +23,20 @@ def get_db_connection(db_path: Path = config.DB_PATH) -> Engine:
 
 
 def get_pathologies_par_region(
-    annee: int = 2023,
+    debut_annee: int = 2023,
     pathologie: Optional[str] = None,
+    fin_annee: Optional[int] = None,
 ) -> pd.DataFrame:
-    """Retourne les totaux et la prevalence par region pour une annee donnee."""
+    """Retourne les totaux et la prevalence par region pour une annee ou une plage."""
     engine = get_db_connection()
+    start_year = int(debut_annee)
+    end_year = int(fin_annee) if fin_annee is not None else start_year
+    if end_year < start_year:
+        start_year, end_year = end_year, start_year
+    use_range = end_year != start_year
+    date_clause = "annee BETWEEN :debut AND :fin" if use_range else "annee = :debut"
     query = text(
-        """
+        f"""
         SELECT 
             region,
             SUM(Ntop) AS total_cas,
@@ -39,28 +46,38 @@ def get_pathologies_par_region(
                 ELSE 0
             END AS prevalence
         FROM effectifs
-        WHERE annee = :annee
+        WHERE {date_clause}
           AND region != '99'
           AND (:pathologie IS NULL OR patho_niv1 = :pathologie)
         GROUP BY region
         ORDER BY total_cas DESC
         """
     )
+    params: dict[str, object] = {"debut": start_year, "pathologie": pathologie}
+    if use_range:
+        params["fin"] = end_year
     return pd.read_sql_query(
         query,
         engine,
-        params=_sql_params(annee=annee, pathologie=pathologie),
+        params=_sql_params(**params),
     )
 
 
 def get_pathologies_par_departement(
-    annee: int = 2023,
+    debut_annee: int = 2023,
     pathologie: Optional[str] = None,
+    fin_annee: Optional[int] = None,
 ) -> pd.DataFrame:
-    """Retourne les totaux et la prevalence par departement pour une annee donnee."""
+    """Retourne les totaux et la prevalence par departement pour une annee ou une plage."""
     engine = get_db_connection()
+    start_year = int(debut_annee)
+    end_year = int(fin_annee) if fin_annee is not None else start_year
+    if end_year < start_year:
+        start_year, end_year = end_year, start_year
+    use_range = end_year != start_year
+    date_clause = "annee BETWEEN :debut AND :fin" if use_range else "annee = :debut"
     query = text(
-        """
+        f"""
         SELECT 
             dept,
             SUM(Ntop) AS total_cas,
@@ -70,7 +87,7 @@ def get_pathologies_par_departement(
                 ELSE 0
             END AS prevalence
         FROM effectifs
-        WHERE annee = :annee
+        WHERE {date_clause}
           AND dept IS NOT NULL
           AND dept != '99'
           AND (:pathologie IS NULL OR patho_niv1 = :pathologie)
@@ -78,10 +95,13 @@ def get_pathologies_par_departement(
         ORDER BY total_cas DESC
         """
     )
+    params: dict[str, object] = {"debut": start_year, "pathologie": pathologie}
+    if use_range:
+        params["fin"] = end_year
     return pd.read_sql_query(
         query,
         engine,
-        params=_sql_params(annee=annee, pathologie=pathologie),
+        params=_sql_params(**params),
     )
 
 
