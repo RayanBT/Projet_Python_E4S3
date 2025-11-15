@@ -3,7 +3,7 @@
 import csv
 import sqlite3
 from pathlib import Path
-from typing import Callable, Final, Optional
+from typing import Any, Callable, Final, Optional, cast
 
 from pydantic import ValidationError
 
@@ -101,7 +101,7 @@ def import_csv_to_sqlite(csv_path: Path, db_path: Path, table_name: str) -> int:
     # Compteurs pour le reporting
     total_inserted = 0
     total_skipped = 0
-    validation_errors = []
+    validation_errors: list[dict[str, object]] = []
 
     with sqlite3.connect(db_path) as conn:
         # 1) S'assurer que la table existe
@@ -132,7 +132,7 @@ def import_csv_to_sqlite(csv_path: Path, db_path: Path, table_name: str) -> int:
                 row_number += 1
                 try:
                     # Validation Pydantic de la ligne
-                    validated_data = EffectifCreate(**row)
+                    validated_data = EffectifCreate(**cast(dict[str, Any], row))
                     
                     # Conversion en dictionnaire et extraction des valeurs dans l'ordre
                     data_dict = validated_data.model_dump(exclude={'id'}, by_alias=False)

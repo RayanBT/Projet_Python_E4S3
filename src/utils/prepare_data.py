@@ -150,7 +150,7 @@ def summarise_database(report: Reporter) -> None:
             
             valid_count = 0
             invalid_count = 0
-            errors_sample = []
+            errors_sample: list[str] = []
             
             for idx, row in enumerate(rows, start=1):
                 try:

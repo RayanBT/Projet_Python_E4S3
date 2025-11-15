@@ -4,11 +4,11 @@ Page Histogramme - Distributions statistiques des données de santé.
 
 import os
 import sys
-from typing import Any
+from typing import Any, Sequence, cast
 
 from dash import Input, Output, callback, dcc, html
 import pandas as pd
-import plotly.graph_objects as go
+import plotly.graph_objects as go  # type: ignore[import-untyped]
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = os.path.dirname(os.path.dirname(current_dir))
@@ -52,6 +52,26 @@ def layout() -> html.Div:
         "94": "Corse",
     }
 
+    pathologie_options: list[dict[str, str]] = [{"label": "Toutes", "value": "all"}] + [
+        {"label": p, "value": p}
+        for p in pathologies
+    ]
+    region_options: list[dict[str, str]] = [{"label": "Toutes", "value": "all"}] + [
+        {"label": f"{region_names.get(r, f'Région {r}')} ({r})", "value": r}
+        for r in regions
+    ]
+    distribution_options: list[dict[str, str]] = [
+        {"label": "Distribution par âge", "value": "age"},
+        {"label": "Distribution de la Prévalence (%)", "value": "prevalence"},
+        {"label": "Distribution du Nombre de Cas", "value": "nombre_cas"},
+        {"label": "Distribution de la Population", "value": "population"},
+    ]
+    sexe_options: list[dict[str, object]] = [
+        {"label": "Tous", "value": "all"},
+        {"label": "Hommes", "value": 1},
+        {"label": "Femmes", "value": 2},
+    ]
+
     return html.Div(
         [
             html.Div(
@@ -74,24 +94,7 @@ def layout() -> html.Div:
                             html.Label("Type de distribution", className="filter-label"),
                             dcc.Dropdown(
                                 id="histogram-type",
-                                options=[
-                                    {
-                                        "label": "Distribution par Âge",
-                                        "value": "age",
-                                    },
-                                    {
-                                        "label": "Distribution de la Prévalence (%)",
-                                        "value": "prevalence",
-                                    },
-                                    {
-                                        "label": "Distribution du Nombre de Cas",
-                                        "value": "nombre_cas",
-                                    },
-                                    {
-                                        "label": "Distribution de la Population",
-                                        "value": "population",
-                                    },
-                                ],
+                                options=cast(Sequence[Any], distribution_options),
                                 value="age",
                                 clearable=False,
                                 className="filter-dropdown",
@@ -132,13 +135,7 @@ def layout() -> html.Div:
                                     html.Label("Pathologie", className="filter-label"),
                                     dcc.Dropdown(
                                         id="histogram-pathologie",
-                                        options=[
-                                            {"label": "Toutes", "value": "all"}
-                                        ]
-                                        + [
-                                            {"label": p, "value": p}
-                                            for p in pathologies
-                                        ],
+                                        options=cast(Sequence[Any], pathologie_options),
                                         value="all",
                                         clearable=False,
                                         className="filter-dropdown",
@@ -152,11 +149,7 @@ def layout() -> html.Div:
                                     html.Label("Région", className="filter-label"),
                                     dcc.Dropdown(
                                         id="histogram-region",
-                                        options=[{"label": "Toutes", "value": "all"}]
-                                        + [
-                                            {"label": f"{region_names.get(r, f'Région {r}')} ({r})", "value": r}
-                                            for r in regions
-                                        ],
+                                        options=cast(Sequence[Any], region_options),
                                         value="all",
                                         clearable=False,
                                         className="filter-dropdown",
@@ -170,11 +163,7 @@ def layout() -> html.Div:
                                     html.Label("Sexe", className="filter-label"),
                                     dcc.Dropdown(
                                         id="histogram-sexe",
-                                        options=[
-                                            {"label": "Tous", "value": "all"},
-                                            {"label": "Hommes", "value": 1},
-                                            {"label": "Femmes", "value": 2},
-                                        ],
+                                        options=cast(Sequence[Any], sexe_options),
                                         value="all",
                                         clearable=False,
                                         className="filter-dropdown",
@@ -283,8 +272,11 @@ def update_histogram(
 
         df["age_group"] = df["age_numeric"].apply(get_age_group)
 
-        grouped_df = df.groupby("age_group", as_index=False)["nombre_cas"].sum()
-        df = grouped_df.sort_values("age_group")
+        df = (
+            df.groupby("age_group", as_index=False)
+            .agg({"nombre_cas": "sum"})
+            .sort_values(by="age_group")
+        )
 
         x_col = "age_group"
         y_col = "nombre_cas"

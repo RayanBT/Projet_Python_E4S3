@@ -4,8 +4,8 @@ import math
 from typing import Any
 
 from dash import Input, Output, callback, clientside_callback, dcc, html
-import plotly.express as px
-import plotly.graph_objects as go
+import plotly.express as px  # type: ignore[import-untyped]
+import plotly.graph_objects as go  # type: ignore[import-untyped]
 
 from src.components.icons import icon_chart_bar, icon_pin
 from src.utils.db_queries import get_evolution_pathologies, get_liste_pathologies
@@ -187,7 +187,7 @@ def layout() -> html.Div:
                     html.Div(className="filter-content", children=[
                         dcc.Dropdown(
                             id='evolution-pathologie-dropdown',
-                            options=[{'label': p, 'value': p} for p in pathologies],
+                            options=[{'label': p, 'value': p} for p in pathologies],  # type: ignore[arg-type]
                             value=[],
                             multi=True,
                             placeholder=(

@@ -3,8 +3,10 @@ Page de visualisation de la répartition de la gravité des pathologies
 avec un diagramme en camembert (pie chart)
 """
 
-from dash import html, dcc, callback, Input, Output
-import plotly.graph_objects as go
+from typing import Any, Sequence, cast
+
+from dash import Input, Output, callback, dcc, html
+import plotly.graph_objects as go  # type: ignore[import-untyped]
 from src.utils.db_queries import (
     get_repartition_gravite,
     get_annees_disponibles,
@@ -44,8 +46,11 @@ def layout() -> html.Div:
     }
     
     # Options pour le dropdown avec noms complets
-    regions_options = [{'label': 'Toutes', 'value': 'Toutes'}]
-    regions_options += [{'label': region_names.get(code, code), 'value': code} for code in regions_codes]
+    regions_options: list[dict[str, str]] = [{'label': 'Toutes', 'value': 'Toutes'}]
+    regions_options += [
+        {'label': region_names.get(code, code), 'value': code}
+        for code in regions_codes
+    ]
     
     # Layout de la page
     return html.Div([
@@ -100,7 +105,7 @@ def layout() -> html.Div:
                 html.Div(className="filter-content", children=[
                     dcc.Dropdown(
                         id='camembert-region-dropdown',
-                        options=regions_options,
+                        options=cast(Sequence[Any], regions_options),
                         value='Toutes',
                         clearable=False,
                         className="filter-dropdown"
@@ -114,7 +119,10 @@ def layout() -> html.Div:
                 html.Div(className="filter-content", children=[
                     dcc.Dropdown(
                         id='camembert-pathologie-dropdown',
-                        options=[{'label': patho, 'value': patho} for patho in pathologies],
+                        options=cast(
+                            Sequence[Any],
+                            [{'label': patho, 'value': patho} for patho in pathologies],
+                        ),
                         value='Toutes',
                         clearable=False,
                         className="filter-dropdown"
@@ -152,7 +160,11 @@ def layout() -> html.Div:
      Input('camembert-region-dropdown', 'value'),
      Input('camembert-pathologie-dropdown', 'value')]
 )
-def update_camembert(periode, region, pathologie):
+def update_camembert(
+    periode: list[int],
+    region: str,
+    pathologie: str,
+) -> tuple[go.Figure, Any, str]:
     """
     Met à jour le diagramme en camembert et les statistiques
     """

@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import folium
 import pandas as pd
@@ -427,7 +427,8 @@ def create_choropleth_html(
 
             legend_html += "</div>"
 
-            fmap.get_root().html.add_child(folium.Element(legend_html))
+            root = cast(Any, fmap.get_root())
+            root.html.add_child(folium.Element(legend_html))
 
             remove_folium_legend = """
             <script>
@@ -446,7 +447,8 @@ def create_choropleth_html(
                 });
             </script>
             """
-            fmap.get_root().html.add_child(folium.Element(remove_folium_legend))
+            root = cast(Any, fmap.get_root())
+            root.html.add_child(folium.Element(remove_folium_legend))
         except Exception as error:
             error_html = (
                 "<div style='font-family: Arial; color: #e74c3c; "
@@ -741,7 +743,7 @@ def layout() -> html.Div:
                                 html.Label("Indicateur", className="form-label"),
                                 dcc.Dropdown(
                                     id="carte-indicateur-dropdown",
-                                    options=[
+                                    options=[  # type: ignore[arg-type]
                                         {
                                             "label": "📊 Prévalence (%)",
                                             "value": "prevalence",

@@ -1,9 +1,9 @@
 """Page dédiée à l'analyse des données via un graphique radar."""
 
-from typing import Any
+from typing import Any, Sequence, cast
 
 from dash import Input, Output, callback, dcc, html
-import plotly.graph_objects as go
+import plotly.graph_objects as go  # type: ignore[import-untyped]
 import pandas as pd
 
 from src.components.icons import icon_pin
@@ -261,10 +261,13 @@ def layout() -> html.Div:
                                     html.Label("Dimension à analyser"),
                                     dcc.Dropdown(
                                         id="radar-dimension-dropdown",
-                                        options=[  # type: ignore[arg-type]
-                                            {"label": "Pathologies", "value": "pathologies"},
-                                            {"label": "Régions", "value": "regions"},
-                                        ],
+                                        options=cast(
+                                            Sequence[Any],
+                                            [
+                                                {"label": "Pathologies", "value": "pathologies"},
+                                                {"label": "Régions", "value": "regions"},
+                                            ],
+                                        ),
                                         value="pathologies",
                                         clearable=False,
                                     ),
@@ -304,10 +307,13 @@ def layout() -> html.Div:
                                     html.Label("Indicateur à visualiser"),
                                     dcc.Dropdown(
                                         id="radar-indicateur-dropdown",
-                                        options=[
-                                            {"label": "Nombre de cas", "value": "total_cas"},
-                                            {"label": "Prévalence (%)", "value": "prevalence"},
-                                        ],
+                                        options=cast(
+                                            Sequence[Any],
+                                            [
+                                                {"label": "Nombre de cas", "value": "total_cas"},
+                                                {"label": "Prévalence (%)", "value": "prevalence"},
+                                            ],
+                                        ),
                                         value="total_cas",
                                         clearable=False,
                                     ),
@@ -320,11 +326,14 @@ def layout() -> html.Div:
                                     html.Label("Choisir pathologie (optionnel)", id="radar-pathologie-selector-label"),
                                     dcc.Dropdown(
                                         id="radar-patho-niv1-dropdown",
-                                        options=[
-                                            {"label": p, "value": p}
-                                            for p in get_pathologies_with_niv2()
-                                            if p in ALLOWED_PATHOLOGIES
-                                        ],
+                                        options=cast(
+                                            Sequence[Any],
+                                            [
+                                                {"label": p, "value": p}
+                                                for p in get_pathologies_with_niv2()
+                                                if p in ALLOWED_PATHOLOGIES
+                                            ],
+                                        ),
                                         value=None,
                                         placeholder="Sélectionnez une pathologie",
                                         clearable=True,

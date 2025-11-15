@@ -91,3 +91,4 @@ FRANCE_ZOOM: Final[int] = 6
 APP_PORT: Final[int] = 8050
 APP_HOST: Final[str] = "127.0.0.1"
 APP_DEBUG: Final[bool] = True
+APP_AUTO_OPEN_BROWSER: Final[bool] = True

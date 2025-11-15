@@ -3,13 +3,18 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional, List
+from typing import Any, Optional
 
 import pandas as pd
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
 import config
+
+
+def _sql_params(**kwargs: object) -> Any:
+    """Prépare un dictionnaire de paramètres typé pour pandas.read_sql_query."""
+    return kwargs
 
 
 def get_db_connection(db_path: Path = config.DB_PATH) -> Engine:
@@ -44,7 +49,7 @@ def get_pathologies_par_region(
     return pd.read_sql_query(
         query,
         engine,
-        params={"annee": annee, "pathologie": pathologie},  # type: ignore[arg-type]
+        params=_sql_params(annee=annee, pathologie=pathologie),
     )
 
 
@@ -76,7 +81,7 @@ def get_pathologies_par_departement(
     return pd.read_sql_query(
         query,
         engine,
-        params={"annee": annee, "pathologie": pathologie},  # type: ignore[arg-type]
+        params=_sql_params(annee=annee, pathologie=pathologie),
     )
 
 
@@ -121,12 +126,12 @@ def get_evolution_pathologies(
     return pd.read_sql_query(
         query,
         engine,
-        params={
-            "debut": debut_annee,
-            "fin": fin_annee,
-            "pathologie": pathologie,
-            "region": region,
-        },  # type: ignore[arg-type]
+        params=_sql_params(
+            debut=debut_annee,
+            fin=fin_annee,
+            pathologie=pathologie,
+            region=region,
+        ),
     )
 
 
@@ -153,10 +158,10 @@ def get_repartition_age_sexe(
     return pd.read_sql_query(
         query,
         engine,
-        params={
-            "annee": annee,
-            "patho": pathologie,
-        },  # type: ignore[arg-type]
+        params=_sql_params(
+            annee=annee,
+            patho=pathologie,
+        ),
     )
 
 
@@ -203,11 +208,11 @@ def get_repartition_patho_niv2(debut_annee: int = 2015, fin_annee: int = 2023, p
     return pd.read_sql_query(
         query,
         engine,
-        params={"debut_annee": debut_annee, "fin_annee": fin_annee, "patho": pathologie},
+        params=_sql_params(debut_annee=debut_annee, fin_annee=fin_annee, patho=pathologie),
     )
 
 
-def get_pathologies_with_niv2() -> List[str]:
+def get_pathologies_with_niv2() -> list[str]:
     """Retourne la liste des patho_niv1 qui ont au moins une patho_niv2 renseignée."""
     engine = get_db_connection()
     query = text(
@@ -251,7 +256,7 @@ def get_repartition_patho_niv3(debut_annee: int = 2015, fin_annee: int = 2023, p
     return pd.read_sql_query(
         query,
         engine,
-        params={"debut_annee": debut_annee, "fin_annee": fin_annee, "patho": pathologie},
+        params=_sql_params(debut_annee=debut_annee, fin_annee=fin_annee, patho=pathologie),
     )
 
 
@@ -282,13 +287,13 @@ def get_distribution_age(
     return pd.read_sql_query(
         query,
         engine,
-        params={
-            "debut_annee": debut_annee,
-            "fin_annee": fin_annee,
-            "pathologie": pathologie,
-            "region": region,
-            "sexe": sexe,
-        },  # type: ignore[arg-type]
+        params=_sql_params(
+            debut_annee=debut_annee,
+            fin_annee=fin_annee,
+            pathologie=pathologie,
+            region=region,
+            sexe=sexe,
+        ),
     )
 
 
@@ -317,13 +322,13 @@ def get_distribution_prevalence(
     return pd.read_sql_query(
         query,
         engine,
-        params={
-            "debut_annee": debut_annee,
-            "fin_annee": fin_annee,
-            "pathologie": pathologie,
-            "region": region,
-            "sexe": sexe,
-        },  # type: ignore[arg-type]
+        params=_sql_params(
+            debut_annee=debut_annee,
+            fin_annee=fin_annee,
+            pathologie=pathologie,
+            region=region,
+            sexe=sexe,
+        ),
     )
 
 
@@ -352,13 +357,13 @@ def get_distribution_nombre_cas(
     return pd.read_sql_query(
         query,
         engine,
-        params={
-            "debut_annee": debut_annee,
-            "fin_annee": fin_annee,
-            "pathologie": pathologie,
-            "region": region,
-            "sexe": sexe,
-        },  # type: ignore[arg-type]
+        params=_sql_params(
+            debut_annee=debut_annee,
+            fin_annee=fin_annee,
+            pathologie=pathologie,
+            region=region,
+            sexe=sexe,
+        ),
     )
 
 
@@ -387,13 +392,13 @@ def get_distribution_population(
     return pd.read_sql_query(
         query,
         engine,
-        params={
-            "debut_annee": debut_annee,
-            "fin_annee": fin_annee,
-            "pathologie": pathologie,
-            "region": region,
-            "sexe": sexe,
-        },  # type: ignore[arg-type]
+        params=_sql_params(
+            debut_annee=debut_annee,
+            fin_annee=fin_annee,
+            pathologie=pathologie,
+            region=region,
+            sexe=sexe,
+        ),
     )
 
 
@@ -452,7 +457,7 @@ def get_repartition_gravite(
         "\"Niveau prioritaire\" IS NOT NULL"
     ]
     
-    params = {"debut_annee": debut_annee, "fin_annee": fin_annee}
+    params: dict[str, object] = {"debut_annee": debut_annee, "fin_annee": fin_annee}
     
     if region and region != 'Toutes':
         conditions.append("region = :region")
@@ -476,4 +481,8 @@ def get_repartition_gravite(
         """
     )
     
-    return pd.read_sql_query(query, engine, params=params)
+    return pd.read_sql_query(
+        query,
+        engine,
+        params=_sql_params(**params),
+    )
