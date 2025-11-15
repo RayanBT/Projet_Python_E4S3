@@ -238,6 +238,8 @@ Projet_Python_E4S3/
 ├── main.py                    # Point d'entrée de l'application
 ├── config.py                  # Configuration de l'application
 ├── requirements.txt           # Dépendances Python
+├── pytest.ini                 # Configuration pytest
+├── run_tests.py               # Script d'exécution des tests
 ├── README.md                  # Documentation
 ├── LICENSE                    # Licence MIT
 │
@@ -252,8 +254,8 @@ Projet_Python_E4S3/
 │   ├── schema.py              # Schémas Pydantic
 │   └── utils.py               # Utilitaires DB (import CSV, etc.)
 │
-├── images/                    # Images du projet
-│   └── ...                    # Captures d'écran, diagrammes, etc.
+├── tests/                     # Tests unitaires
+│   └── ...                    # Fichiers de tests
 │
 └── src/                       # Code source
     ├── assets/                # CSS pour le style
@@ -272,6 +274,12 @@ Projet_Python_E4S3/
     │   ├── footer.py
     │   ├── navbar.py
     │   └── icons.py
+    │
+    ├── images/                # Images pour la documentation
+    │   ├── accueil_installation.png
+    │   ├── evolution_covid.png
+    │   ├── histo_respiratoire_age.png
+    │   └── carte_diabete_prevalence.png
     │
     ├── pages/                 # Pages de l'application
     │   ├── home.py            # Routage principal
@@ -807,69 +815,73 @@ pytest -m integration       # Tests d'intégration seulement
 
 ## 📈 Rapport d'Analyse
 
-### Vue d'Ensemble des Données
-
 L'analyse des données de l'Assurance Maladie (2015-2023) révèle plusieurs tendances importantes concernant les pathologies en France.
 
-### Principales Conclusions
+### Quelques exemples de conclusions extraites des données
 
-#### 1. Évolution Temporelle des Pathologies
-
-**Tendances Générales** :
-- Augmentation constante du **diabète** : +15% entre 2015 et 2023
-- **Maladies cardiovasculaires** : Stabilisation après 2018
-- **Cancers** : Croissance modérée mais continue (+8% sur la période)
-- **Maladies psychiatriques** : Forte augmentation depuis 2020 (+20%)
+#### 1. Évolution Temporelle
 
 **Impact de la COVID-19** :
-- Rupture nette dans les données 2020-2021
-- Sous-diagnostic probable de certaines pathologies chroniques
-- Rebond en 2022-2023 avec rattrapage du dépistage
 
 ![Évolution temporelle - Impact COVID-19](images/evolution_covid.png)
 
-#### 2. Disparités Géographiques
+**Observations clés** :
+- **Rupture majeure** : Pic massif de cas en 2021 lors des vagues épidémiques
+- **Chute drastique post-2021** : Réduction de plus de 40% du nombre de cas en deux ans
+- **Effets des mesures sanitaires** : Impact visible des confinements, port du masque et distanciation sociale sur la transmission
+- **Succès de la vaccination** : Corrélation entre campagnes vaccinales et diminution des formes graves
+- **Sous-diagnostic probable** : Retard dans le suivi des pathologies chroniques pendant la crise sanitaire
 
-**Régions les plus touchées** :
-- **Hauts-de-France** : Prévalence élevée pour diabète et maladies cardiovasculaires
-- **Île-de-France** : Forte concentration de cas en valeur absolue
-- **PACA** : Prévalence élevée pour pathologies liées au vieillissement
+**Implications** :
+- Nécessité d'un rattrapage du dépistage pour les pathologies chroniques négligées en 2020-2021
+- Vigilance sur l'évolution post-pandémique et les possibles séquelles (COVID long)
+- Adaptation des politiques de santé publique face aux futures crises sanitaires
 
-**Facteurs explicatifs identifiés** :
-- Densité de population (Île-de-France)
-- Profil socio-économique (Nord-Est)
-- Pyramide des âges (PACA, forte proportion de seniors)
+#### 2. Répartition par Âge
 
-#### 3. Répartition par Âge et Sexe
+**Analyse des pathologies respiratoires chroniques** :
 
-**Pathologies selon l'âge** :
-- **0-20 ans** : Principalement troubles du développement et asthme
-- **20-40 ans** : Troubles psychiatriques et diabète de type 1
-- **40-60 ans** : Montée du diabète de type 2 et hypertension
-- **60+ ans** : Maladies cardiovasculaires, cancers, polypathologies
+![Distribution des pathologies respiratoires par âge](images/histo_respiratoire_age.png)
 
-**Différences Homme/Femme** :
-- **Hommes** : Prévalence plus élevée pour maladies cardiovasculaires (<45 ans)
-- **Femmes** : Prévalence plus élevée pour troubles psychiatriques et thyroïde
-- **Équilibre** : Diabète touche équitablement les deux sexes
+**Profil bimodal observé** :
+- **Pic chez les jeunes enfants (0-10 ans)** : Forte prévalence liée aux infections respiratoires récurrentes, asthme infantile et développement du système immunitaire encore immature
+- **Pic chez les seniors (70+ ans)** : Prévalence maximale due au vieillissement pulmonaire, insuffisance respiratoire chronique et comorbidités
 
-#### 4. Niveau de Gravité
+**Creux intermédiaire (20-50 ans)** :
+- Période de relative bonne santé respiratoire
+- Faible prévalence chez les adultes jeunes et d'âge moyen
+- Impact limité du tabagisme à ce stade (effets cumulatifs non encore visibles)
 
-**Classification par gravité** :
-- **Pathologies légères** (30%) : Troubles thyroïdiens, asthme contrôlé
-- **Pathologies modérées** (45%) : Diabète, hypertension
-- **Pathologies graves** (25%) : Insuffisance rénale, cancers actifs, maladies neurodégénératives
+**Facteurs explicatifs possibles** :
+- **Vulnérabilité pédiatrique** : Système respiratoire en développement, expositions virales fréquentes (crèches, écoles)
+- **Vieillissement physiologique** : Perte d'élasticité pulmonaire, diminution de la capacité respiratoire, affaiblissement des défenses immunitaires
+- **Facteurs environnementaux cumulatifs** : Exposition professionnelle, pollution, tabagisme sur le long terme chez les seniors
 
-**Charge de morbidité** :
-- 15% des patients cumulent 3+ pathologies (polypathologie)
-- Polypathologie concentrée chez les 70+ ans (45% de cette tranche)
+**Implications** :
+- Surveillance accrue des populations vulnérables (nourrissons et personnes âgées)
+- Programmes de prévention ciblés (vaccination antigrippale, arrêt du tabac)
+- Adaptation des protocoles de soins selon l'âge
 
-### Recommandations
+#### 3. Carte Choroplèthe - Disparités Géographiques du Diabète
 
-1. **Prévention ciblée** : Focus sur les régions à haute prévalence
-2. **Dépistage précoce** : Renforcer pour le diabète et les cancers
-3. **Suivi post-COVID** : Rattraper le retard de diagnostic 2020-2021
-4. **Prise en charge gériatrique** : Adaptation aux polypathologies
+![Carte de prévalence du diabète par région](images/carte_diabete_prevalence.png)
+
+**Analyse géographique du diabète en France** :
+
+**Disparités régionales marquées** :
+- **Grand Est** : Prévalence la plus élevée (teinte foncée), forte corrélation avec le profil socio-économique défavorisé, héritage industriel et habitudes alimentaires régionales
+- **Île-de-France** : Prévalence modérée malgré la forte densité de population, meilleur accès aux soins et prévention active
+- **Régions du Sud** (PACA, Occitanie) : Prévalence plus faible, influence du régime méditerranéen et mode de vie actif
+
+**Facteurs explicatifs possibles** :
+- **Socio-économiques** : Niveau de vie, accès aux soins, éducation à la santé
+- **Démographiques** : Pyramide des âges, taux d'obésité régional
+- **Culturels** : Habitudes alimentaires, activité physique, traditions culinaires
+
+**Implications pour les politiques de santé** :
+- Renforcement des actions de prévention dans les régions à haute prévalence
+- Adaptation des programmes de dépistage selon les territoires
+- Prise en compte des déterminants sociaux de la santé
 
 ### Limites de l'Analyse
 
@@ -930,6 +942,11 @@ with requests.get(url, stream=True) as r:
 **Fichier** : `src/assets/zone_dropdown.css`  
 **Source** : Inspiré de [Dash Bootstrap Components](https://dash-bootstrap-components.opensource.faculty.ai/)  
 **Explication** : Styles personnalisés pour les composants `dcc.Dropdown` de Dash.
+
+#### 6. Fichiers GeoJSON pour les cartes de France
+**Fichiers** : `data/geolocalisation/*.geojson`  
+**Source** : [france-geojson par gregoiredavid](https://github.com/gregoiredavid/france-geojson/tree/master)  
+**Explication** : Utilisation des contours géographiques des régions et départements français pour la visualisation cartographique avec Folium.
 
 ### Ressources et Documentation
 
