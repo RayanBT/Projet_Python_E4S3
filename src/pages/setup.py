@@ -11,6 +11,7 @@ STEP_FLOW = [
     "Telechargement du CSV",
     "Initialisation de la base SQLite",
     "Verification des donnees",
+    "Verification et nettoyage des labels de pathologies",
     "Initialisation terminee",
 ]
 
