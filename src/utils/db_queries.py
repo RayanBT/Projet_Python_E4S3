@@ -9,8 +9,10 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
+import config
 
-def get_db_connection(db_path: Path = Path("data/effectifs.sqlite3")) -> Engine:
+
+def get_db_connection(db_path: Path = config.DB_PATH) -> Engine:
     """Cree une connexion a la base de donnees SQLite."""
     return create_engine(f"sqlite:///{db_path}")
 

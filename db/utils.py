@@ -7,8 +7,10 @@ from typing import Callable, Final, Optional
 
 from pydantic import ValidationError
 
+import config
+
 # Constantes
-CHUNK_SIZE: Final[int] = 20_000
+CHUNK_SIZE: Final[int] = config.DB_CHUNK_SIZE
 DEFAULT_DELIMITER = ";"
 FALLBACK_DELIMITER = ","
 

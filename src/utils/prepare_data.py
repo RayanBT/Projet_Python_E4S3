@@ -27,27 +27,20 @@ from src.utils.clean_data import (
     clean_pathologie_labels
 )
 
+# Import de la configuration centralisée
+import config
+
 # Type pour les fonctions de rapport/log
 Reporter = Callable[[str], None]
 
-# URLs et chemins de fichiers (à déplacer dans config.py ?)
-ROOT: Final[Path] = Path(__file__).resolve().parent.parent.parent
-DATA_DIR: Final[Path] = ROOT / "data"
-
-CSV_URL: Final[str] = (
-    "https://data.ameli.fr/api/explore/v2.1/catalog/datasets/effectifs/"
-    "exports/csv?use_labels=true"
-)
-DEPT_REGION_URL: Final[str] = (
-    "https://static.data.gouv.fr/resources/"
-    "departements-et-leurs-regions/"
-    "20190815-175403/departements-region.json"
-)
-
-CSV_DEST: Final[Path] = DATA_DIR / "raw/effectifs.csv"
-DEPT_REGION_DEST: Final[Path] = DATA_DIR / "geolocalisation/departements-regions.json"
-DB_PATH: Final[Path] = DATA_DIR / "effectifs.sqlite3"
-TABLE_NAME: Final[str] = "effectifs"
+# Utilisation des chemins depuis config.py
+DATA_DIR: Final[Path] = config.DATA_DIR
+CSV_URL: Final[str] = config.CSV_URL
+DEPT_REGION_URL: Final[str] = config.DEPT_REGION_URL
+CSV_DEST: Final[Path] = config.CSV_RAW_PATH
+DEPT_REGION_DEST: Final[Path] = config.DEPT_REGION_JSON_PATH
+DB_PATH: Final[Path] = config.DB_PATH
+TABLE_NAME: Final[str] = config.DB_TABLE_NAME
 
 
 def ensure_departements_regions_json(report: Reporter | None = None) -> Path:
@@ -117,7 +110,7 @@ def ensure_effectifs_csv(report: Reporter | None = None) -> tuple[Path, Path]:
             reporter(f"[ERREUR] Telechargement echoue : {exc}")
             raise
 
-    cleaned_csv = DATA_DIR / "clean/csv_clean.csv"
+    cleaned_csv = config.CSV_CLEAN_PATH
     try:
         reporter("[INFO] Nettoyage des donnees en cours...")
         cleaned_csv = clean_csv_data(CSV_DEST, cleaned_csv, report=reporter)

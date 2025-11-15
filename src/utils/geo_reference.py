@@ -7,6 +7,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import TypedDict
 
+import config
+
 
 class DepartementInfo(TypedDict):
     """Information sur un departement."""
@@ -27,12 +29,7 @@ def load_departements_regions() -> list[DepartementInfo]:
         FileNotFoundError: Si le fichier n'existe pas.
         json.JSONDecodeError: Si le fichier n'est pas un JSON valide.
     """
-    json_path = (
-        Path(__file__).resolve().parents[2]
-        / "data"
-        / "geolocalisation"
-        / "departements-regions.json"
-    )
+    json_path = config.DEPT_REGION_JSON_PATH
 
     if not json_path.exists():
         raise FileNotFoundError(

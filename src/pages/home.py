@@ -22,6 +22,8 @@ import src.pages.radar as radar_module
 import src.pages.camembert as camembert_module
 import src.pages.apropos as apropos_module
 
+import config
+
 COMPLETION_DELAY = 2.0
 
 
@@ -51,10 +53,8 @@ def create_app(init_state: InitializationState) -> Dash:
     Returns:
         Dash: Instance configuree de l'application Dash.
     """
-    # Chemin absolu vers le dossier assets dans src/
-    # __file__ est dans src/pages/home.py, donc on remonte de 1 niveau
-    src_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    assets_path = os.path.join(src_root, 'assets')
+    # Utilisation du chemin assets depuis config.py
+    assets_path = str(config.ASSETS_DIR)
 
     app = Dash(
         __name__,

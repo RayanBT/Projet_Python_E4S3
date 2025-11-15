@@ -5,6 +5,7 @@ Gère le lancement du serveur Dash et l'initialisation des données si nécessai
 
 import os
 
+import config
 from src.pages.home import create_app
 from src.state.init_progress import init_state
 from src.utils.prepare_data import (
@@ -16,7 +17,6 @@ from src.utils.prepare_data import (
 
 # Constantes
 WERKZEUG_RELOADER_VAR = "WERKZEUG_RUN_MAIN"
-DEBUG_MODE = True
 
 
 def main() -> None:
@@ -43,7 +43,7 @@ def main() -> None:
             print("[INFO] Nettoyage des labels lance en arriere-plan.")
 
     app = create_app(init_state)
-    app.run(debug=DEBUG_MODE)
+    app.run(debug=config.APP_DEBUG, host=config.APP_HOST, port=config.APP_PORT)
 
 
 if __name__ == "__main__":

@@ -19,12 +19,12 @@ from src.utils.db_queries import (
 )
 from src.utils.geo_reference import get_dept_to_region_mapping
 
-GEOJSON_REGIONS_PATH = Path("data/geolocalisation/regions-avec-outre-mer.geojson")
-GEOJSON_DEPARTEMENTS_PATH = Path(
-    "data/geolocalisation/departements-avec-outre-mer.geojson"
-)
-FRANCE_CENTER: tuple[float, float] = (46.603354, 1.888334)
-FRANCE_ZOOM: int = 6
+import config
+
+GEOJSON_REGIONS_PATH = config.GEOJSON_REGIONS_PATH
+GEOJSON_DEPARTEMENTS_PATH = config.GEOJSON_DEPARTEMENTS_PATH
+FRANCE_CENTER: tuple[float, float] = config.FRANCE_CENTER
+FRANCE_ZOOM: int = config.FRANCE_ZOOM
 
 
 def _format_int(value: int | float) -> str:
