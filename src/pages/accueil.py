@@ -37,21 +37,26 @@ def layout() -> html.Div:
 
         html.Div(className="card-large", children=[
             html.H2("Vidéo de Présentation", className="section-title text-center"),
-            html.Div(className="alert alert-info", children=[
-                html.Div(className="centered-content", style={'padding': '60px 20px'}, children=[
-                    icon_video("icon-large"),
-                    html.P(
-                        "Vidéo de présentation du projet",
-                        className="mt-2 text-muted",
-                        style={'fontSize': '1.2rem'}
+            html.Div(
+                className="video-wrapper",
+                children=[
+                    html.Video(
+                        controls=True,
+                        src="/video.mp4",
+                        className="home-video",
+                        style={
+                            'width': '100%',
+                            'borderRadius': '16px',
+                            'boxShadow': '0 16px 28px rgba(15,23,42,0.15)',
+                            'outline': 'none',
+                            'backgroundColor': '#000',
+                        },
                     ),
-                    html.P(
-                        "(À intégrer : lien YouTube, fichier vidéo, ou enregistrement)",
-                        className="text-small text-light",
-                        style={'fontStyle': 'italic'}
-                    ),
-                ]),
-            ]),
+                    html.Div(
+                        className="video-caption text-center text-muted mt-2",
+                    )
+                ]
+            ),
         ]),
 
         html.Div(className="button-group mt-3", children=[

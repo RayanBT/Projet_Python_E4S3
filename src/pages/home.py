@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import os
 import time
+from typing import Any
 
 from dash import Dash, Input, Output, dcc, html
+from flask import send_from_directory
 
 from src.components.footer import footer
 from src.components.header import header
@@ -62,6 +64,11 @@ def create_app(init_state: InitializationState) -> Dash:
         assets_folder=assets_path,
         assets_url_path='/assets'
     )
+
+    @app.server.route("/video.mp4")
+    def serve_home_video() -> Any:
+        """Expose la vidéo locale (racine du projet)."""
+        return send_from_directory(config.ROOT_DIR, "video.mp4")
 
     initial_status = init_state.to_dict()
     initial_status["show_loader"] = _should_show_loader(initial_status)
