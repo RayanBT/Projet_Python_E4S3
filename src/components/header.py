@@ -3,7 +3,7 @@
 from dash import html
 
 
-def header(title: str = "Mon Dashboard") -> html.Header:
+def header(title: str = "Analyse des pathologies en France") -> html.Header:
     """Construit le bandeau d'entete principal.
 
     Args:
@@ -16,8 +16,7 @@ def header(title: str = "Mon Dashboard") -> html.Header:
         className="app-header",
         children=[
             html.Div(className="header-content", children=[
-                html.H1(title, className="header-title"),
-                html.P("Analyse des pathologies en France", className="header-subtitle")
+                html.H1(title, className="header-title")
             ])
         ]
     )
