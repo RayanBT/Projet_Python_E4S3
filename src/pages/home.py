@@ -67,7 +67,10 @@ def create_app(init_state: InitializationState) -> Dash:
     initial_status["show_loader"] = _should_show_loader(initial_status)
     app.layout = html.Div(
         [
-            header("Analyse des pathologies en France"),
+            header(
+                "Dashboard d'Analyse des Pathologies en France",
+                "Visualisation interactive des données de santé publique (2015-2023)"
+            ),
             navbar(),
             dcc.Location(id="url", refresh=False),
             dcc.Store(id="init-status", data=initial_status),

@@ -57,7 +57,7 @@ def layout() -> html.Div:
         html.Div(className="button-group mt-3", children=[
             dcc.Link(
                 html.Button(
-                    [icon_map("icon-inline"), "Voir la Carte Choroplèthe"],
+                    [icon_map("icon-inline"), "Voir la Carte - Prévalence"],
                     className="btn btn-carte"
                 ),
                 href='/carte',

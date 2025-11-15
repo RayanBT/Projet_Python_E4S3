@@ -52,12 +52,12 @@ def layout() -> html.Div:
     # En-tête
     html.Div(className="mb-3", children=[
         html.H1(
-            "Répartition de la Gravité des Pathologies",
+            "Diagramme Camembert des Pathologies",
             className="page-title text-center"
         ),
         html.P(
             (
-                "Analysez la répartition de la gravité pour différentes pathologies. "
+                "Visualisez la répartition des pathologies par niveau ou catégorie sous forme de diagramme camembert. "
                 "Comparez les différentes pathologies et observez les tendances."
             ),
             className="text-center text-muted"

@@ -1,4 +1,4 @@
-"""Page dediee a la carte choroplethe des pathologies."""
+"""Page dédiée à la carte des pathologies (choroplèthe)."""
 
 from __future__ import annotations
 

@@ -20,7 +20,7 @@ def navbar() -> html.Nav:
         html.A([icon_chart_line(), "Évolution"], href="/evolution", className="nav-link"),
         html.A([icon_chart_bar(), "Histogrammes"], href="/histogramme", className="nav-link"),
         html.A([icon_chart_spider(), "Graphique Radar"], href="/radar", className="nav-link"),
-        html.A([icon_pie_chart(), "Gravité"], href="/camembert", className="nav-link"),
+        html.A([icon_pie_chart(), "Diagramme Camembert"], href="/camembert", className="nav-link"),
         html.A([icon_info(), "À propos"], href="/about", className="nav-link"),
     ]
 

@@ -103,17 +103,27 @@ def layout() -> html.Div:
                         [
                             html.Div(
                                 [
-                                    html.Label("Année", className="filter-label"),
-                                    dcc.Dropdown(
-                                        id="histogram-annee",
-                                        options=[
-                                            {"label": str(y), "value": y}
-                                            for y in range(2015, 2024)
-                                        ],
-                                        value=2023,
-                                        clearable=False,
-                                        className="filter-dropdown",
+                                    html.Label("Période d'analyse", className="filter-label"),
+                                    dcc.RangeSlider(
+                                        id="histogram-periode-slider",
+                                        min=2015,
+                                        max=2023,
+                                        value=[2015, 2023],
+                                        marks={
+                                            2015: '2015',
+                                            2017: '2017',
+                                            2019: '2019',
+                                            2021: '2021',
+                                            2023: '2023'
+                                        },
+                                        step=1,
+                                        className="period-slider",
+                                        tooltip={"placement": "bottom", "always_visible": True}
                                     ),
+                                    html.Div(
+                                        id="histogram-periode-display",
+                                        className="period-display"
+                                    )
                                 ],
                                 className="filter-group",
                             ),
@@ -214,10 +224,10 @@ def update_filter_visibility(
 
 
 @callback(
-    [Output("histogram-graph", "figure"), Output("histogram-stats", "children")],
+    [Output("histogram-graph", "figure"), Output("histogram-stats", "children"), Output("histogram-periode-display", "children")],
     [
         Input("histogram-type", "value"),
-        Input("histogram-annee", "value"),
+        Input("histogram-periode-slider", "value"),
         Input("histogram-pathologie", "value"),
         Input("histogram-region", "value"),
         Input("histogram-sexe", "value"),
@@ -225,12 +235,13 @@ def update_filter_visibility(
 )
 def update_histogram(
     histogram_type: str,
-    annee: int,
+    periode: list[int],
     pathologie: str,
     region: str,
     sexe: str | int,
-) -> tuple[go.Figure, html.Div | list[html.Div]]:
+) -> tuple[go.Figure, html.Div | list[html.Div], str]:
     """Met à jour l'histogramme selon les paramètres sélectionnés."""
+    debut_annee, fin_annee = periode
     pathologie_param = None if pathologie == "all" else pathologie
     region_param = None if region == "all" else region
     sexe_param: int | None = (
@@ -242,11 +253,13 @@ def update_histogram(
             else None
         )
     )
+    
+    periode_text = f"De {debut_annee} à {fin_annee}"
 
 
     if histogram_type == "age":
         df = get_distribution_age(
-            annee, pathologie_param, region_param, sexe_param
+            debut_annee, fin_annee, pathologie_param, region_param, sexe_param
         )
 
         def extract_age_start(age_range: str) -> int:
@@ -275,13 +288,13 @@ def update_histogram(
 
         x_col = "age_group"
         y_col = "nombre_cas"
-        title = f"Distribution par Âge ({annee})"
+        title = f"Distribution par Âge ({debut_annee}-{fin_annee})"
         xaxis_title = "Âge"
         yaxis_title = "Nombre de Cas"
 
     elif histogram_type == "prevalence":
         df = get_distribution_prevalence(
-            annee, pathologie_param, region_param, sexe_param
+            debut_annee, fin_annee, pathologie_param, region_param, sexe_param
         )
 
         df["prevalence"] = pd.to_numeric(df["prevalence"], errors="coerce")
@@ -298,14 +311,19 @@ def update_histogram(
 
         x_col = "prev_class"
         y_col = "frequence"
-        title = f"Distribution de la Prévalence ({annee})"
+        title = f"Distribution de la Prévalence ({debut_annee}-{fin_annee})"
         xaxis_title = "Prévalence (%)"
         yaxis_title = "Fréquence (Nombre d'observations)"
 
     elif histogram_type == "nombre_cas":
         df = get_distribution_nombre_cas(
-            annee, pathologie_param, region_param, sexe_param
+            debut_annee, fin_annee, pathologie_param, region_param, sexe_param
         )
+        
+        # Convertir en numérique et filtrer les NaN
+        df["nombre_cas"] = pd.to_numeric(df["nombre_cas"], errors="coerce")
+        df = df.dropna(subset=["nombre_cas"])
+        df = df[df["nombre_cas"] > 0]
 
         def get_cas_class_label(cas: float) -> str:
             """Retourne le label de la classe."""
@@ -359,14 +377,19 @@ def update_histogram(
 
         x_col = "cas_class_label"
         y_col = "frequence"
-        title = f"Distribution du Nombre de Cas ({annee})"
+        title = f"Distribution du Nombre de Cas ({debut_annee}-{fin_annee})"
         xaxis_title = "Nombre de Cas"
         yaxis_title = "Fréquence (Nombre d'observations)"
 
     elif histogram_type == "population":
         df = get_distribution_population(
-            annee, pathologie_param, region_param, sexe_param
+            debut_annee, fin_annee, pathologie_param, region_param, sexe_param
         )
+        
+        # Convertir en numérique et filtrer les NaN
+        df["population"] = pd.to_numeric(df["population"], errors="coerce")
+        df = df.dropna(subset=["population"])
+        df = df[df["population"] > 0]
 
         def get_pop_class_label(pop: float) -> str:
             """Retourne le label de la classe."""
@@ -417,7 +440,7 @@ def update_histogram(
 
         x_col = "pop_class_label"
         y_col = "frequence"
-        title = f"Distribution de la Population ({annee})"
+        title = f"Distribution de la Population ({debut_annee}-{fin_annee})"
         xaxis_title = "Population"
         yaxis_title = "Fréquence (Nombre d'observations)"
 
@@ -651,4 +674,4 @@ def update_histogram(
         )
         stats_content = []
 
-    return fig, stats_content
+    return fig, stats_content, periode_text

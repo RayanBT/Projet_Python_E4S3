@@ -95,7 +95,7 @@ def get_evolution_pathologies(
         region: Région spécifique à filtrer (optionnel)
         
     Returns:
-        DataFrame avec les colonnes: annee, patho_niv1, total_cas
+        DataFrame avec les colonnes: annee, patho_niv1, total_cas, population_totale, prevalence
     """
     engine = get_db_connection()
     query = text(
@@ -103,7 +103,12 @@ def get_evolution_pathologies(
         SELECT 
             annee,
             patho_niv1,
-            SUM(Ntop) AS total_cas
+            SUM(Ntop) AS total_cas,
+            SUM(Npop) AS population_totale,
+            CASE 
+                WHEN SUM(Npop) > 0 THEN ROUND(CAST(SUM(Ntop) AS FLOAT) * 100 / SUM(Npop), 2)
+                ELSE 0
+            END AS prevalence
         FROM effectifs
         WHERE annee BETWEEN :debut AND :fin
           AND (:pathologie IS NULL OR patho_niv1 = :pathologie)
@@ -175,14 +180,19 @@ def get_repartition_patho_niv2(debut_annee: int = 2015, fin_annee: int = 2023, p
     Si pathologie est None, retourne une table vide.
     """
     if not pathologie:
-        return pd.DataFrame(columns=["patho_niv2", "total_cas"])
+        return pd.DataFrame(columns=["patho_niv2", "total_cas", "population_totale", "prevalence"])
 
     engine = get_db_connection()
     query = text(
         """
         SELECT
             patho_niv2,
-            SUM(Ntop) AS total_cas
+            SUM(Ntop) AS total_cas,
+            SUM(Npop) AS population_totale,
+            CASE 
+                WHEN SUM(Npop) > 0 THEN ROUND(CAST(SUM(Ntop) AS FLOAT) * 100 / SUM(Npop), 2)
+                ELSE 0
+            END AS prevalence
         FROM effectifs
         WHERE annee BETWEEN :debut_annee AND :fin_annee
           AND (:patho IS NULL OR patho_niv1 = :patho)
@@ -218,14 +228,19 @@ def get_repartition_patho_niv3(debut_annee: int = 2015, fin_annee: int = 2023, p
     Si pathologie est None, retourne une table vide.
     """
     if not pathologie:
-        return pd.DataFrame(columns=["patho_niv3", "total_cas"])
+        return pd.DataFrame(columns=["patho_niv3", "total_cas", "population_totale", "prevalence"])
 
     engine = get_db_connection()
     query = text(
         """
         SELECT
             patho_niv3,
-            SUM(Ntop) AS total_cas
+            SUM(Ntop) AS total_cas,
+            SUM(Npop) AS population_totale,
+            CASE 
+                WHEN SUM(Npop) > 0 THEN ROUND(CAST(SUM(Ntop) AS FLOAT) * 100 / SUM(Npop), 2)
+                ELSE 0
+            END AS prevalence
         FROM effectifs
         WHERE annee BETWEEN :debut_annee AND :fin_annee
           AND (:patho IS NULL OR patho_niv1 = :patho)
@@ -241,12 +256,13 @@ def get_repartition_patho_niv3(debut_annee: int = 2015, fin_annee: int = 2023, p
 
 
 def get_distribution_age(
-    annee: int = 2023,
+    debut_annee: int = 2015,
+    fin_annee: int = 2023,
     pathologie: Optional[str] = None,
     region: Optional[str] = None,
     sexe: Optional[int] = None,
 ) -> pd.DataFrame:
-    """Retourne la distribution des cas par tranche d'âge."""
+    """Retourne la distribution des cas par tranche d'âge sur une plage d'années."""
     engine = get_db_connection()
     query = text(
         """
@@ -254,7 +270,7 @@ def get_distribution_age(
             cla_age_5,
             SUM(Ntop) AS nombre_cas
         FROM effectifs
-        WHERE annee = :annee
+        WHERE annee BETWEEN :debut_annee AND :fin_annee
           AND cla_age_5 != 'tsage'
           AND (:pathologie IS NULL OR patho_niv1 = :pathologie)
           AND (:region IS NULL OR region = :region)
@@ -267,7 +283,8 @@ def get_distribution_age(
         query,
         engine,
         params={
-            "annee": annee,
+            "debut_annee": debut_annee,
+            "fin_annee": fin_annee,
             "pathologie": pathologie,
             "region": region,
             "sexe": sexe,
@@ -276,19 +293,20 @@ def get_distribution_age(
 
 
 def get_distribution_prevalence(
-    annee: int = 2023,
+    debut_annee: int = 2015,
+    fin_annee: int = 2023,
     pathologie: Optional[str] = None,
     region: Optional[str] = None,
     sexe: Optional[int] = None,
 ) -> pd.DataFrame:
-    """Retourne la distribution de la prévalence (variable continue)."""
+    """Retourne la distribution de la prévalence (variable continue) sur une plage d'années."""
     engine = get_db_connection()
     query = text(
         """
         SELECT 
             prev as prevalence
         FROM effectifs
-        WHERE annee = :annee
+        WHERE annee BETWEEN :debut_annee AND :fin_annee
           AND prev IS NOT NULL
           AND prev > 0
           AND (:pathologie IS NULL OR patho_niv1 = :pathologie)
@@ -300,7 +318,8 @@ def get_distribution_prevalence(
         query,
         engine,
         params={
-            "annee": annee,
+            "debut_annee": debut_annee,
+            "fin_annee": fin_annee,
             "pathologie": pathologie,
             "region": region,
             "sexe": sexe,
@@ -309,19 +328,20 @@ def get_distribution_prevalence(
 
 
 def get_distribution_nombre_cas(
-    annee: int = 2023,
+    debut_annee: int = 2015,
+    fin_annee: int = 2023,
     pathologie: Optional[str] = None,
     region: Optional[str] = None,
     sexe: Optional[int] = None,
 ) -> pd.DataFrame:
-    """Retourne la distribution du nombre de cas (variable continue)."""
+    """Retourne la distribution du nombre de cas (variable continue) sur une plage d'années."""
     engine = get_db_connection()
     query = text(
         """
         SELECT 
             Ntop as nombre_cas
         FROM effectifs
-        WHERE annee = :annee
+        WHERE annee BETWEEN :debut_annee AND :fin_annee
           AND Ntop IS NOT NULL
           AND Ntop > 0
           AND (:pathologie IS NULL OR patho_niv1 = :pathologie)
@@ -333,7 +353,8 @@ def get_distribution_nombre_cas(
         query,
         engine,
         params={
-            "annee": annee,
+            "debut_annee": debut_annee,
+            "fin_annee": fin_annee,
             "pathologie": pathologie,
             "region": region,
             "sexe": sexe,
@@ -342,19 +363,20 @@ def get_distribution_nombre_cas(
 
 
 def get_distribution_population(
-    annee: int = 2023,
+    debut_annee: int = 2015,
+    fin_annee: int = 2023,
     pathologie: Optional[str] = None,
     region: Optional[str] = None,
     sexe: Optional[int] = None,
 ) -> pd.DataFrame:
-    """Retourne la distribution de la population (variable continue)."""
+    """Retourne la distribution de la population (variable continue) sur une plage d'années."""
     engine = get_db_connection()
     query = text(
         """
         SELECT 
             Npop as population
         FROM effectifs
-        WHERE annee = :annee
+        WHERE annee BETWEEN :debut_annee AND :fin_annee
           AND Npop IS NOT NULL
           AND Npop > 0
           AND (:pathologie IS NULL OR patho_niv1 = :pathologie)
@@ -366,7 +388,8 @@ def get_distribution_population(
         query,
         engine,
         params={
-            "annee": annee,
+            "debut_annee": debut_annee,
+            "fin_annee": fin_annee,
             "pathologie": pathologie,
             "region": region,
             "sexe": sexe,

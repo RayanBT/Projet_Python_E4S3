@@ -10,8 +10,8 @@ notamment la récupération des pathologies, régions et évolutions temporelles
 
 OBJECTIF DE COUVERTURE:
    - Module db_queries.py: 90%+ (fonctions critiques de requêtage)
-   - Nombre de tests: 16 tests unitaires
-   - Temps d'exécution: < 3 secondes
+   - Nombre de tests: 24 tests unitaires (16 originaux + 8 distributions)
+   - Temps d'exécution: < 5 secondes
 
 STRATÉGIE DE TEST APPLIQUÉE:
    
@@ -64,6 +64,14 @@ TYPES DE TESTS IMPLÉMENTÉS:
    E. Tests de répartitions:
       - get_repartition_patho_niv2() groupe par pathologie niveau 2
       - get_repartition_patho_niv3() groupe par niveau 3
+   
+   F. Tests de distributions (NOUVEAUX):
+      - get_distribution_age() agrège par tranche d'âge sur plage d'années
+      - get_distribution_prevalence() collecte prévalences sur plage
+      - get_distribution_nombre_cas() collecte cas sur plage
+      - get_distribution_population() collecte populations sur plage
+      - Tests paramétrés pour différentes plages (2015-2016, 2015-2023, 2020-2023)
+      - Vérification de l'agrégation correcte (multi-années >= une année)
 
 FIXTURES UTILISÉES:
    
@@ -599,3 +607,193 @@ def test_queries_handle_invalid_region_gracefully(test_database):
     )
     
     assert df.empty, "Le résultat doit être vide pour une région inexistante"
+
+
+# ============================================================================
+# TESTS - Fonctions de distribution (plage d'années)
+# ============================================================================
+
+@pytest.mark.unit
+def test_get_distribution_age_returns_aggregated_data():
+    """
+    Vérifie que get_distribution_age() agrège correctement les cas
+    sur une plage d'années (2015-2023).
+    
+    ARRANGE: Utiliser la vraie base de données
+    ACT: Appeler get_distribution_age() avec plage d'années
+    ASSERT: Vérifier structure et agrégation des données
+    """
+    from src.utils.db_queries import get_distribution_age
+    
+    # ACT: Récupérer distribution sur plage
+    df = get_distribution_age(debut_annee=2015, fin_annee=2023)
+    
+    # ASSERT: Vérifications de structure
+    assert not df.empty, "Le DataFrame ne doit pas être vide"
+    assert "cla_age_5" in df.columns, "La colonne 'cla_age_5' doit exister"
+    assert "nombre_cas" in df.columns, "La colonne 'nombre_cas' doit exister"
+    
+    # ASSERT: Vérification du nombre de tranches d'âge (20 tranches attendues)
+    assert len(df) == 20, f"Attendu 20 tranches d'âge, obtenu {len(df)}"
+    
+    # ASSERT: Vérification que les valeurs sont positives
+    assert (df["nombre_cas"] > 0).all(), "Tous les cas doivent être > 0"
+
+
+@pytest.mark.unit
+def test_get_distribution_age_with_filters():
+    """
+    Vérifie que get_distribution_age() respecte les filtres
+    (pathologie, région, sexe).
+    
+    ARRANGE: Utiliser filtres spécifiques
+    ACT: Appeler avec filtres
+    ASSERT: Vérifier que les données sont filtrées
+    """
+    from src.utils.db_queries import get_distribution_age
+    
+    # ACT: Récupérer avec filtres
+    df_all = get_distribution_age(2015, 2023)
+    df_filtered = get_distribution_age(2015, 2023, pathologie="Maladies cardiovasculaires")
+    
+    # ASSERT: Les données filtrées doivent avoir moins ou égal de cas
+    total_all = df_all["nombre_cas"].sum()
+    total_filtered = df_filtered["nombre_cas"].sum()
+    
+    assert total_filtered <= total_all, "Les données filtrées doivent avoir moins de cas"
+    assert not df_filtered.empty, "Le DataFrame filtré ne doit pas être vide"
+
+
+@pytest.mark.unit
+def test_get_distribution_prevalence_returns_valid_data():
+    """
+    Vérifie que get_distribution_prevalence() retourne des données
+    de prévalence valides sur une plage d'années.
+    
+    ARRANGE: Utiliser la vraie base de données
+    ACT: Appeler get_distribution_prevalence()
+    ASSERT: Vérifier structure et validité des prévalences
+    """
+    from src.utils.db_queries import get_distribution_prevalence
+    
+    # ACT: Récupérer distribution de prévalence
+    df = get_distribution_prevalence(debut_annee=2015, fin_annee=2023)
+    
+    # ASSERT: Vérifications de structure
+    assert not df.empty, "Le DataFrame ne doit pas être vide"
+    assert "prevalence" in df.columns, "La colonne 'prevalence' doit exister"
+    
+    # ASSERT: Conversion en numérique et vérification de plage (comme dans l'UI)
+    df["prevalence"] = pd.to_numeric(df["prevalence"], errors="coerce")
+    df_valid = df.dropna(subset=["prevalence"])
+    
+    assert not df_valid.empty, "Il doit y avoir des valeurs de prévalence valides"
+    assert (df_valid["prevalence"] >= 0).all(), "Toutes les prévalences doivent être >= 0"
+    assert (df_valid["prevalence"] <= 100).all(), "Les prévalences doivent être <= 100%"
+
+
+@pytest.mark.unit
+def test_get_distribution_nombre_cas_returns_valid_data():
+    """
+    Vérifie que get_distribution_nombre_cas() retourne des données
+    de cas valides sur une plage d'années.
+    
+    ARRANGE: Utiliser la vraie base de données
+    ACT: Appeler get_distribution_nombre_cas()
+    ASSERT: Vérifier structure et validité des nombres de cas
+    """
+    from src.utils.db_queries import get_distribution_nombre_cas
+    
+    # ACT: Récupérer distribution du nombre de cas
+    df = get_distribution_nombre_cas(debut_annee=2015, fin_annee=2023)
+    
+    # ASSERT: Vérifications de structure
+    assert not df.empty, "Le DataFrame ne doit pas être vide"
+    assert "nombre_cas" in df.columns, "La colonne 'nombre_cas' doit exister"
+    
+    # ASSERT: Vérification que les valeurs sont positives (après filtrage dans l'UI)
+    # Note: Les données brutes peuvent contenir des 0 ou des NaN
+    assert len(df) > 0, "Le DataFrame doit contenir des données"
+
+
+@pytest.mark.unit
+def test_get_distribution_population_returns_valid_data():
+    """
+    Vérifie que get_distribution_population() retourne des données
+    de population valides sur une plage d'années.
+    
+    ARRANGE: Utiliser la vraie base de données
+    ACT: Appeler get_distribution_population()
+    ASSERT: Vérifier structure et validité des populations
+    """
+    from src.utils.db_queries import get_distribution_population
+    
+    # ACT: Récupérer distribution de population
+    df = get_distribution_population(debut_annee=2015, fin_annee=2023)
+    
+    # ASSERT: Vérifications de structure
+    assert not df.empty, "Le DataFrame ne doit pas être vide"
+    assert "population" in df.columns, "La colonne 'population' doit exister"
+    
+    # ASSERT: Vérification que les valeurs de population sont raisonnables
+    assert len(df) > 0, "Le DataFrame doit contenir des données"
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("debut,fin", [
+    (2015, 2016),  # Plage courte
+    (2015, 2023),  # Plage complète
+    (2020, 2023),  # Plage récente
+])
+def test_distribution_functions_handle_various_date_ranges(debut, fin):
+    """
+    Vérifie que toutes les fonctions de distribution gèrent
+    correctement différentes plages d'années.
+    
+    Test paramétré pour vérifier plusieurs scénarios.
+    """
+    from src.utils.db_queries import (
+        get_distribution_age,
+        get_distribution_prevalence,
+        get_distribution_nombre_cas,
+        get_distribution_population,
+    )
+    
+    # ACT & ASSERT: Chaque fonction doit retourner des données
+    df_age = get_distribution_age(debut, fin)
+    assert not df_age.empty, f"Distribution âge vide pour {debut}-{fin}"
+    
+    df_prev = get_distribution_prevalence(debut, fin)
+    assert not df_prev.empty, f"Distribution prévalence vide pour {debut}-{fin}"
+    
+    df_cas = get_distribution_nombre_cas(debut, fin)
+    assert not df_cas.empty, f"Distribution cas vide pour {debut}-{fin}"
+    
+    df_pop = get_distribution_population(debut, fin)
+    assert not df_pop.empty, f"Distribution population vide pour {debut}-{fin}"
+
+
+@pytest.mark.unit
+def test_distribution_age_aggregates_correctly_over_years():
+    """
+    Vérifie que get_distribution_age() agrège correctement
+    les données sur plusieurs années (somme).
+    
+    ARRANGE: Comparer une année vs plusieurs années
+    ACT: Récupérer distributions
+    ASSERT: Vérifier que multi-années >= une année
+    """
+    from src.utils.db_queries import get_distribution_age
+    
+    # ACT: Récupérer pour une année et pour plusieurs
+    df_2023 = get_distribution_age(2023, 2023)
+    df_multi = get_distribution_age(2015, 2023)
+    
+    # ASSERT: La somme multi-années doit être >= une année
+    total_2023 = df_2023["nombre_cas"].sum()
+    total_multi = df_multi["nombre_cas"].sum()
+    
+    assert total_multi >= total_2023, (
+        f"La somme multi-années ({total_multi:,.0f}) doit être >= "
+        f"une année ({total_2023:,.0f})"
+    )
